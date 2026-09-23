@@ -1,0 +1,2810 @@
+Current Player: C
+Current State: CHOOSE_NEXT_PLAYER
+Action: 4
+Last Played Pile: 4
+Turn History: ['A']
+Active Players: 4
+Piles: [[], [], [], [], ['C'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 5
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 5
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 0.0, 'B': 0.0, 'C': 5.0, 'D': 0.0}
+Current Player: B
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 4
+Turn History: ['A', 'B']
+Active Players: 4
+Piles: [[], [], [], [], ['C'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 5
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 5
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 0.0, 'B': 5.0, 'C': 5.0, 'D': 0.0}
+Current Player: B
+Current State: CHOOSE_NEXT_PLAYER
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'B']
+Active Players: 4
+Piles: [[], [], [], [], ['C', 'B'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 5
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 0.0, 'B': 10.0, 'C': 5.0, 'D': 0.0}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 4
+Turn History: ['A', 'B', 'D']
+Active Players: 4
+Piles: [[], [], [], [], ['C', 'B'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 5
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 0.0, 'B': 10.0, 'C': 5.0, 'D': 5.0}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D']
+Active Players: 4
+Piles: [[], [], ['D'], [], ['C', 'B'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 4
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 0.0, 'B': 10.0, 'C': 5.0, 'D': 10.0}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A']
+Active Players: 4
+Piles: [[], [], ['D'], [], ['C', 'B'], []]
+A:
+  A: 5
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 4
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 10.0}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 4
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 15.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 20.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 7
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 15.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 7
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 10.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 7
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 5.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 8
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 0.0}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 8
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], ['D', 'D'], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 0
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': -5.0}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], [], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 4
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 0.0}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 5.0}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': 0.0}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': -5.0}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 10.0, 'C': 5.0, 'D': -10.0}
+Current Player: B
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B']
+Active Players: 4
+Piles: [[], ['D'], [], [], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 4
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 14.385964912280702, 'C': 5.0, 'D': -10.0}
+Current Player: B
+Current State: CHOOSE_NEXT_PLAYER
+Action: 3
+Last Played Pile: 3
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 3
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 18.55263157894737, 'C': 5.0, 'D': -10.0}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 3
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 3
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 3
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 18.55263157894737, 'C': 5.0, 'D': -6.031746031746032}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 5
+Last Played Pile: 5
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 3
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 2
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 18.55263157894737, 'C': 5.0, 'D': -2.243867243867243}
+Current Player: B
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 5
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 3
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 2
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -2.243867243867243}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 2
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': 1.2283549783549792}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': 4.561688311688313}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 6
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -0.4383116883116873}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 8
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -5.438311688311687}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 7
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -10.438311688311687}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 8
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -15.438311688311687}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 6
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D', 'D'], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 1
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -20.438311688311686}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], [], [], ['B'], ['C', 'B', 'A', 'B'], ['D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 2
+Dead Chips: 2
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -17.750139645300933}
+Current Player: D
+Current State: ELIMINATE_CHIP
+Action: 5
+Last Played Pile: 5
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], [], [], ['B'], ['C', 'B', 'A', 'B'], ['D', 'D']]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 2
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -15.145972978634266}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 5
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], [], [], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 2
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -12.62072045338174}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -10.169740061224877}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 5.0, 'D': -15.169740061224877}
+Current Player: C
+Current State: CHOOSE_PILE
+Action: 8
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C']
+Active Players: 4
+Piles: [[], ['D'], [], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 4
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 7.314814814814815, 'D': -15.169740061224877}
+Current Player: C
+Current State: CHOOSE_NEXT_PLAYER
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C']
+Active Players: 4
+Piles: [[], ['D'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 3
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 9.567067067067068, 'D': -15.169740061224877}
+Current Player: D
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 2
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D']
+Active Players: 4
+Piles: [[], ['D'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 3
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 1
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 9.567067067067068, 'D': -12.976757605084526}
+Current Player: D
+Current State: CHOOSE_NEXT_PLAYER
+Action: 0
+Last Played Pile: 0
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D']
+Active Players: 4
+Piles: [['D'], ['D'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 3
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 9.567067067067068, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_PILE
+Action: 8
+Last Played Pile: 0
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C']
+Active Players: 4
+Piles: [['D'], ['D'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 3
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 11.650400400400402, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_NEXT_PLAYER
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C']
+Active Players: 4
+Piles: [['D'], ['D', 'C'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 13.682920725603655, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_NEXT_PLAYER
+Action: 8
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C']
+Active Players: 4
+Piles: [['D'], ['D', 'C'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 5.0, 'B': 22.17581998474447, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C', 'A']
+Active Players: 4
+Piles: [['D'], ['D', 'C'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 4
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 6.937984496124031, 'B': 22.17581998474447, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 0
+Last Played Pile: 0
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C', 'A']
+Active Players: 4
+Piles: [['D', 'A'], ['D', 'C'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 3
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 8.831923890063425, 'B': 22.17581998474447, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: B
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 0
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C', 'A', 'B']
+Active Players: 4
+Piles: [['D', 'A'], ['D', 'C'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 3
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 2
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 8.831923890063425, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'D', 'A', 'D', 'B', 'D', 'B', 'D', 'C', 'D', 'C', 'A', 'B', 'A']
+Active Players: 4
+Piles: [['D', 'A'], ['D', 'C', 'B'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 3
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 10.643518092961976, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], ['D', 'C', 'B', 'A'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 12.416567738352047, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: ELIMINATE_CHIP
+Action: 1
+Last Played Pile: 1
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], ['D', 'C', 'B', 'A', 'A'], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 1
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 14.152678849463157, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 1
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 1
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 15.853359121572002, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 1
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 15.853359121572002, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 2
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C', 'D'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 17.487346049676578, 'B': 24.027671836596323, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: B
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 2
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C', 'D'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 1
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 17.487346049676578, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 19.059673093701736, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 0
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 19.059673093701736, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: ELIMINATE_CHIP
+Action: 6
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A', 'A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 20.574824608853252, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: ELIMINATE_CHIP
+Action: 8
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [['D', 'A', 'A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 1
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 15.574824608853252, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 1
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 17.036812912946818, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 1
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 17.036812912946818, 'B': 25.630235939160425, 'C': 8.682920725603655, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_PILE
+Action: 9
+Last Played Pile: 4
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 2
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 17.036812912946818, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 18.425701801835707, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 0
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 18.425701801835707, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 9
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [[], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 2
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 13.425701801835707, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 6
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 14.74845312458703, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 9.74845312458703, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 4.74845312458703, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 0
+Turn History: ['A', 'B', 'A', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'B', 'A', 'C', 'A']
+Active Players: 3
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -0.25154687541296994, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 7
+Last Played Pile: 0
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 0.9922342191143934, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 4
+Last Played Pile: 4
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C'], []]
+A:
+  A: 1
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 0.9922342191143934, 'B': 25.630235939160425, 'C': 10.095350104134727, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 4
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], []]
+A:
+  A: 0
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 0.9922342191143934, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 2
+Last Played Pile: 2
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], []]
+A:
+  A: 0
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 2.182710409590584, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 5
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], []]
+A:
+  A: 0
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': 2.182710409590584, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_CHIP
+Action: 6
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], []]
+A:
+  A: 0
+  B: 1
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -2.817289590409416, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 7
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B']]
+A:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -1.675737078993891, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B']]
+A:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -6.675737078993891, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B']]
+A:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -11.67573707899389, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_NEXT_PLAYER
+Action: 9
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B']]
+A:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -16.67573707899389, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: A
+Current State: CHOOSE_PILE
+Action: 6
+Last Played Pile: 5
+Turn History: ['A', 'A', 'C', 'C', 'A', 'A', 'A', 'C', 'A', 'C', 'A', 'A']
+Active Players: 2
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B']]
+A:
+  A: 0
+  B: 0
+  C: 1
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Cumulative Rewards: {'A': -15.593485996742809, 'B': 25.630235939160425, 'C': 11.303079572733761, 'D': -10.84000546833239}
+Current Player: C
+Current State: CHOOSE_PILE
+Action: 5
+Last Played Pile: 5
+Turn History: ['C', 'C', 'C', 'C']
+Active Players: 1
+Piles: [['A'], [], ['C', 'D', 'B', 'C'], ['B'], ['C', 'B', 'A', 'B', 'D', 'C', 'A'], ['B', 'C']]
+A:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 2
+
+B:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+C:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 0
+
+D:
+  A: 0
+  B: 0
+  C: 0
+  D: 0
+Dead Chips: 3
+
+Game Over Condition Met
+Winner (C) reward: 15
+Cumulative Rewards: {'A': -15.593485996742809, 'B': 25.630235939160425, 'C': 27.37145564110983, 'D': -10.84000546833239}
