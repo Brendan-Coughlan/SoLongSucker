@@ -1,15 +1,16 @@
 import random
 from chip_game_env import ChipGameEnv, GameState
 from pathlib import Path
+import numpy as np
 
 def play_game_with_multiple_agents(
     env: ChipGameEnv,
     agent_rewards: dict[str, list[float]],
     steps_per_episode: list[int],
-    num_episodes: int = 1,
-    max_steps: int = 100,
+    num_episodes: int = 10000,
+    max_steps: int = 500,
     render: bool = True,
-    log_file_name: str = "data/game_log.txt"
+    log_file_name: str = "data/game_log.txt",
 ) -> None:
     agents: list[RandomAgent] = [RandomAgent(name) for name in ["A", "B", "C", "D"]]
 
@@ -35,9 +36,8 @@ def play_game_with_multiple_agents(
                 for log in step_log:
                     logfile.write(log)
 
-                # Update total rewards for all agents
-                for agent in agents:
-                    total_rewards[agent.name] += step_rewards[agent.name]
+                agent_name: str = current_agent.name
+                total_rewards[agent_name] += step_rewards[agent_name]
 
                 # Log cumulative rewards after each step
                 cumulative_rewards_log: str = f"Cumulative Rewards: {total_rewards}\n"
@@ -77,3 +77,39 @@ class RandomAgent:
             env.NUM_PILES,
             env.action_space.n - 1,
         )
+
+def print_agent_statistics(
+    agent_rewards: dict[str, list[float]],
+    steps_per_episode: list[int],
+) -> None:
+    rewards = np.array(
+        list(agent_rewards.values()),
+        dtype=float,
+    )
+
+    # Total reward across all four agents for each episode
+    episode_rewards = rewards.sum(axis=0)
+
+    steps = np.array(
+        steps_per_episode,
+        dtype=float,
+    )
+
+    print("\nRandom Agent Performance")
+    print("-" * 60)
+
+    print(
+        f"Reward: "
+        f"{np.mean(episode_rewards):.2f} ± "
+        f"{np.std(episode_rewards):.2f} "
+        f"[{np.min(episode_rewards):.2f}, "
+        f"{np.max(episode_rewards):.2f}]"
+    )
+
+    print(
+        f"Steps:  "
+        f"{np.mean(steps):.2f} ± "
+        f"{np.std(steps):.2f} "
+        f"[{np.min(steps):.0f}, "
+        f"{np.max(steps):.0f}]"
+    )

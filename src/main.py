@@ -1,10 +1,10 @@
 from chip_game_env import ChipGameEnv
-from random_agent import play_game_with_multiple_agents
+from random_agent import play_game_with_multiple_agents, print_agent_statistics
 from plotter import plot_agent_progress
 
 if __name__ == "__main__":
     NUM_EPISODES: int = 10000
-    MAX_STEPS: int = 100
+    MAX_STEPS: int = 500
 
     env: ChipGameEnv = ChipGameEnv()
 
@@ -24,6 +24,11 @@ if __name__ == "__main__":
         render=True,
         agent_rewards=agent_rewards,
         steps_per_episode=steps_per_episode,
+    )
+
+    print_agent_statistics(
+        agent_rewards,
+        steps_per_episode,
     )
 
     plot_agent_progress(
