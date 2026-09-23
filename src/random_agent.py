@@ -1,16 +1,20 @@
 import random
 from chip_game_env import ChipGameEnv, GameState
-
+from pathlib import Path
 
 def play_game_with_multiple_agents(
     env: ChipGameEnv,
+    agent_rewards: dict[str, list[float]],
+    steps_per_episode: list[int],
     num_episodes: int = 1,
     max_steps: int = 100,
     render: bool = True,
+    log_file_name: str = "data/game_log.txt"
 ) -> None:
     agents: list[RandomAgent] = [RandomAgent(name) for name in ["A", "B", "C", "D"]]
 
-    with open("game_log.txt", "w") as logfile:
+    Path("data").mkdir(parents=True, exist_ok=True)
+    with open(log_file_name, "w") as logfile:
         for episode in range(num_episodes):
             obs, _ = env.reset()
 
@@ -54,6 +58,9 @@ def play_game_with_multiple_agents(
                     f"  Agent {agent.name}: "
                     f"Total Reward = {total_rewards[agent.name]}"
                 )
+                agent_rewards[agent.name].append(total_rewards[agent.name])
+
+            steps_per_episode.append(step + 1)
 
     env.close()
 
