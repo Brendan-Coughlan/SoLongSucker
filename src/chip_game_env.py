@@ -22,16 +22,21 @@ class Player:
         player_letters: list[str],
     ) -> None:
         self.letter: str = letter
+
+        # Give the player their starting chips and none belonging to other players.
         self.chips: dict[str, int] = {
             l: max_chips if l == letter else 0 for l in player_letters
         }
+
         self.dead_chips: int = 0
         self.eliminated: bool = False
         self.reward: float = 0.0
 
+    # Check whether the player has chips belonging to only one player.
     def has_only_one_chip_type(self) -> bool:
         return sum(1 for count in self.chips.values() if count > 0) == 1
 
+    # Return the letter of the player's only remaining chip type.
     def get_only_chip_type(self) -> str:
         return next(letter for letter, count in self.chips.items() if count > 0)
 
@@ -52,12 +57,14 @@ class ChipGameEnv(gym.Env):
         # Gym variables
         self.done: bool = False
 
+        # Actions represent either selecting one of six piles or one of four players.
         self.action_space: spaces.Space = spaces.Discrete(
             self.NUM_PILES + self.NUM_PLAYERS
         )
 
         MAX_PILE_SIZE: int = self.NUM_PLAYERS * self.MAX_CHIPS
 
+        # Combine all game information into one fixed-length observation.
         TOTAL_OBSERVATION_SIZE: int = (
             self.NUM_PILES * self.NUM_PLAYERS * MAX_PILE_SIZE  # Board state
             + self.NUM_PLAYERS * self.NUM_PLAYERS  # Player chips
@@ -81,9 +88,11 @@ class ChipGameEnv(gym.Env):
     ) -> tuple[np.ndarray, dict[str, Any]]:
         super().reset(seed=seed)
 
+        # Restore all players and game variables to their starting state.
         self.players: list[Player] = [
             self._create_player(letter) for letter in self.PLAYER_LETTERS
         ]
+
         self.current_player_index: int = random.randint(0, self.NUM_PLAYERS - 1)
         self.piles: list[list[str]] = [[] for _ in range(self.NUM_PILES)]
         self.state: GameState = GameState.CHOOSE_PILE
@@ -98,6 +107,7 @@ class ChipGameEnv(gym.Env):
 
         return observation, info
 
+    # Scale positive rewards based on how many steps have elapsed.
     @staticmethod
     def reward_fn(reward: float, chips: int, steps: int) -> float:
         beta: int = 50
@@ -112,6 +122,8 @@ class ChipGameEnv(gym.Env):
         info: dict[str, Any] = {}
         winner: Player | None = None
         step_log: list[str] = []
+
+        # Track rewards produced by this action for each player.
         step_rewards: dict[str, float] = {player.letter: 0.0 for player in self.players}
 
         if self.done:
@@ -221,7 +233,7 @@ class ChipGameEnv(gym.Env):
             step_log.append(f"Dead Chips: {player.dead_chips}\n")
             step_log.append("\n")
 
-        # Update player rewards and track step rewards
+        # Return each player's accumulated reward and reset it for the next step.
         for player in self.players:
             step_rewards[player.letter] = player.reward
             player.reward = 0.0
@@ -237,6 +249,7 @@ class ChipGameEnv(gym.Env):
                 None,
             )
 
+            # The last non-eliminated player receives the winning reward.
             if winner is not None:
                 winner.reward += 15.0
                 step_rewards[winner.letter] += 15.0
@@ -248,7 +261,6 @@ class ChipGameEnv(gym.Env):
         info["log"] = step_log
 
         return observation, step_rewards, self.done, False, info
-
 
     def _get_obs(self) -> np.ndarray:
         max_pile_size: int = self.NUM_PLAYERS * self.MAX_CHIPS
@@ -262,6 +274,7 @@ class ChipGameEnv(gym.Env):
             + 1  # Steps
         )
 
+        # Encode the complete game state into the numeric array used by Gym.
         observation: np.ndarray = np.zeros(
             total_observation_size,
             dtype=np.int32,
@@ -305,7 +318,7 @@ class ChipGameEnv(gym.Env):
         observation[offset] = self.steps_num
 
         return observation
-    
+
     def _create_player(self, letter: str) -> Player:
         return Player(
             letter,
@@ -317,33 +330,25 @@ class ChipGameEnv(gym.Env):
         return self.players[self.current_player_index]
 
     def _play_chip(self, pile: int, chip_letter: str) -> bool:
-        if (
-            0 <= pile < self.NUM_PILES
-            and self._current_player().chips[chip_letter] > 0
-        ):
+        # Only play the chip if the pile is valid and the player owns that chip.
+        if 0 <= pile < self.NUM_PILES and self._current_player().chips[chip_letter] > 0:
             self.piles[pile].append(chip_letter)
             self._current_player().chips[chip_letter] -= 1
             self.last_played_pile = pile
 
+            # Two matching chips on top of a pile trigger a capture.
             if self._check_capture(pile):
                 benefitting_player: Player | None = next(
-                    (
-                        player
-                        for player in self.players
-                        if player.letter == chip_letter
-                    ),
+                    (player for player in self.players if player.letter == chip_letter),
                     None,
                 )
 
-                # Capturing player is still active
+                # Give control of the capture to the player represented by the matching chip.
                 if benefitting_player is not None and not benefitting_player.eliminated:
-                    self.current_player_index = self.players.index(
-                        benefitting_player
-                    )
+                    self.current_player_index = self.players.index(benefitting_player)
                     self.state = GameState.ELIMINATE_CHIP
 
-                # Capturing player has already been eliminated:
-                # dead-zone the entire pile
+                # If that player is eliminated, move the pile's chips to the dead zone.
                 else:
                     for chip in self.piles[self.last_played_pile]:
                         player: Player | None = next(
@@ -375,29 +380,24 @@ class ChipGameEnv(gym.Env):
     def _check_capture(self, pile: int) -> bool:
         played_pile: list[str] = self.piles[pile]
 
-        return (
-            len(played_pile) > 1
-            and played_pile[-1] == played_pile[-2]
-        )
+        # A pile is captured when its two most recent chips match.
+        return len(played_pile) > 1 and played_pile[-1] == played_pile[-2]
 
     def _determine_next_players(self) -> None:
         played_pile: list[str] = self.piles[self.last_played_pile]
-        active_players: list[Player] = [
-            p for p in self.players if not p.eliminated
-        ]
-        active_player_letters: list[str] = [
-            p.letter for p in active_players
-        ]
+        active_players: list[Player] = [p for p in self.players if not p.eliminated]
+        active_player_letters: list[str] = [p.letter for p in active_players]
+
+        # Find active players whose chip colors currently appear in the pile.
         colors_in_pile: list[str] = [
             color
             for color in set(played_pile)
             if not next(
-                player.eliminated
-                for player in self.players
-                if player.letter == color
+                player.eliminated for player in self.players if player.letter == color
             )
         ]
 
+        # If every active color appears, choose whoever appeared least recently.
         if sorted(colors_in_pile) == sorted(active_player_letters):
             last_appearances: dict[str, int] = {
                 color: len(played_pile) - 1 - played_pile[::-1].index(color)
@@ -410,49 +410,40 @@ class ChipGameEnv(gym.Env):
             )
 
             self._set_next_player(
-                next(
-                    p
-                    for p in active_players
-                    if p.letter == next_player_letter
-                )
+                next(p for p in active_players if p.letter == next_player_letter)
             )
             self.state = GameState.CHOOSE_PILE
 
         else:
+            # Players whose colors are absent from the pile are eligible to play next.
             self.eligible_next_players = [
-                p
-                for p in active_players
-                if p.letter not in colors_in_pile
+                p for p in active_players if p.letter not in colors_in_pile
             ]
 
             if len(self.eligible_next_players) == 1:
                 self._set_next_player(self.eligible_next_players[0])
                 self.state = GameState.CHOOSE_PILE
             else:
+                # Multiple eligible players require an explicit next-player choice.
                 self.state = GameState.CHOOSE_NEXT_PLAYER
 
     def _choose_next_player(self, letter: str) -> bool:
-        if any(
-            p.letter == letter
-            for p in self.eligible_next_players
-        ):
-            self._set_next_player(
-                next(
-                    p
-                    for p in self.players
-                    if p.letter == letter
-                )
-            )
+        # Accept the choice only if that player is currently eligible.
+        if any(p.letter == letter for p in self.eligible_next_players):
+            self._set_next_player(next(p for p in self.players if p.letter == letter))
             return True
 
         return False
 
     def _set_next_player(self, player: Player) -> None:
         self.current_player_index = self.players.index(player)
+
+        # Preserve turn order so play can return to an earlier player after elimination.
         self.turn_history.append(player)
         self._check_player_elimination()
 
     def _check_player_elimination(self) -> bool:
+        # Eliminate chipless players until an active player with chips is reached.
         while (
             sum(self._current_player().chips.values()) == 0
             and not self._current_player().eliminated
@@ -466,6 +457,7 @@ class ChipGameEnv(gym.Env):
                     if player != self._current_player()
                 ]
 
+                # Return control to the most recent player still in the turn history.
                 if len(self.turn_history) > 0:
                     self.current_player_index = self.players.index(
                         self.turn_history[-1]
@@ -487,24 +479,24 @@ class ChipGameEnv(gym.Env):
     def _eliminate_chip(self, chip_letter: str) -> bool:
         captured_pile: list[str] = self.piles[self.last_played_pile]
 
-        # Check if the chip being eliminated is actually in the pile
+        # Only a chip actually present in the captured pile can be eliminated.
         if chip_letter in captured_pile:
             player: Player | None = next(
                 (p for p in self.players if p.letter == chip_letter),
                 None,
             )
 
-            # Increment eliminated chip count
+            # Record the selected chip as permanently removed from its owner.
             player.dead_chips += 1
 
-            # Add all chips in the captured pile to the current player's pocket
+            # Transfer the captured pile into the capturing player's hand.
             for chip in captured_pile:
                 self._current_player().chips[chip] += 1
 
-            # Remove the eliminated chip
+            # Remove the selected chip instead of keeping it after the capture.
             self._current_player().chips[chip_letter] -= 1
 
-            # Empty the captured pile and reset state
+            # Clear the captured pile and begin the next turn.
             self.piles[self.last_played_pile] = []
             self.state = GameState.CHOOSE_PILE
 
@@ -514,11 +506,7 @@ class ChipGameEnv(gym.Env):
         return False
 
     def _count_active_players(self) -> int:
-        return sum(
-            1
-            for player in self.players
-            if not player.eliminated
-        )
+        return sum(1 for player in self.players if not player.eliminated)
 
     def is_game_over(self) -> bool:
         return self._count_active_players() <= 1
@@ -528,4 +516,3 @@ class ChipGameEnv(gym.Env):
 
     def close(self) -> None:
         pygame.quit()
-
