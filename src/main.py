@@ -1,6 +1,7 @@
 from chip_game_env import ChipGameEnv
-from random_agent import play_game_with_multiple_agents, print_agent_statistics
-from plotter import plot_agent_progress
+from random_agent import RandomAgent
+from simulation import play_game_with_multiple_agents
+from analysis import plot_agent_progress, print_agent_statistics
 
 if __name__ == "__main__":
     # Set the number of games to run and the maximum length of each game.
@@ -18,12 +19,16 @@ if __name__ == "__main__":
         "D": [],
     }
 
+    # Create the random agents
+    agents: list[RandomAgent] = [RandomAgent(name) for name in agent_rewards.keys()]
+
     # Store how many steps each episode takes to finish.
     steps_per_episode: list[int] = []
 
     # Run the simulation and collect agent rewards and episode lengths.
     play_game_with_multiple_agents(
         env=env,
+        agents=agents,
         num_episodes=NUM_EPISODES,
         max_steps=MAX_STEPS,
         render=True,
@@ -42,4 +47,6 @@ if __name__ == "__main__":
         agent_rewards=agent_rewards,
         steps_per_episode=steps_per_episode,
         num_episodes=NUM_EPISODES,
+        experiment_name="Random Agent Performance",
+        plot_file_name="data/random_agent_baseline.png"
     )
