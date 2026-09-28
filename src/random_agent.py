@@ -1,9 +1,12 @@
 import random
-from agent import Agent
+from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv, GameState
 
 
-class RandomAgent(Agent):
+class RandomAgent(BaseAgent):
+    def __init__(self, name, state_size, action_size, **kwargs):
+        super().__init__(name, state_size, action_size, **kwargs)
+
     def choose_action(self, env: ChipGameEnv) -> int:
         # Choose a random pile when the game requires a pile selection.
         if env.state == GameState.CHOOSE_PILE:

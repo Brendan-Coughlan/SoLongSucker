@@ -1,12 +1,23 @@
 from pathlib import Path
-
-from agent import Agent
+import random
+from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
+from dqn_agent import DQNAgent
+import numpy as np
+import tensorflow as tf
+
+class Agent:
+    def __init__(self, name, shared_agent):
+        self.name = name
+        self.shared_agent = shared_agent
+
+    def act(self, state, env_state):
+        return self.shared_agent.act(state, env_state)
 
 
 def play_game_with_multiple_agents(
     env: ChipGameEnv,
-    agents: list[Agent],
+    agents: list[BaseAgent],
     agent_rewards: dict[str, list[float]],
     steps_per_episode: list[int],
     num_episodes: int = 10000,
@@ -29,7 +40,7 @@ def play_game_with_multiple_agents(
                     env.render()
 
                 # Select the agent whose turn it currently is.
-                current_agent: Agent = agents[env.current_player_index]
+                current_agent: BaseAgent = agents[env.current_player_index]
 
                 action: int = current_agent.choose_action(env)
 
@@ -71,5 +82,90 @@ def play_game_with_multiple_agents(
                 agent_rewards[agent.name].append(total_rewards[agent.name])
 
             steps_per_episode.append(step + 1)
+
+    env.close()
+
+
+def play_game_with_agents(
+    env, agent_type, num_episodes=1000, max_steps=200, batch_size=32, **agent_params
+):
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+
+    if agent_type == "DQN":
+        AgentClass = DQNAgent
+    else:
+        raise ValueError("Invalid agent type")
+
+    # Create a single shared agent
+    shared_agent = AgentClass("Shared", state_size, action_size, **agent_params)
+
+    # Create individual agents that use the shared network
+    agents = [Agent(name, shared_agent) for name in ["A", "B", "C", "D"]]
+
+    steps_per_episode = []
+    agent_rewards = {name: [] for name in ["A", "B", "C", "D"]}
+
+    for episode in range(num_episodes):
+        obs, _ = env.reset()
+        obs = np.reshape(obs, [1, state_size])
+        total_rewards = {agent.name: 0 for agent in agents}
+
+        for step in range(max_steps):
+            current_agent = agents[env.current_player_index]
+            action = current_agent.act(
+                tf.convert_to_tensor(obs, dtype=tf.float32), env.state
+            )
+            next_obs, step_rewards, done, _, info = env.step(action)
+            next_obs = np.reshape(next_obs, [1, state_size])
+
+            reward = step_rewards[current_agent.name]
+            shared_agent.remember(obs, action, reward, next_obs, done, env.steps_num)
+            obs = next_obs
+
+            for agent in agents:
+                total_rewards[agent.name] += step_rewards[agent.name]
+
+            if len(shared_agent.memory) > batch_size and step % 10 == 0:
+                minibatch = random.sample(shared_agent.memory, batch_size)
+                states = tf.convert_to_tensor(
+                    np.array([t[0] for t in minibatch]).reshape(-1, state_size),
+                    dtype=tf.float32,
+                )
+                actions = tf.convert_to_tensor(
+                    np.array([t[1] for t in minibatch]), dtype=tf.int64
+                )
+                rewards = tf.convert_to_tensor(
+                    np.array([t[2] for t in minibatch]), dtype=tf.float32
+                )
+                next_states = tf.convert_to_tensor(
+                    np.array([t[3] for t in minibatch]).reshape(-1, state_size),
+                    dtype=tf.float32,
+                )
+                dones = tf.convert_to_tensor(
+                    np.array([t[4] for t in minibatch]), dtype=tf.float32
+                )
+
+                shared_agent.replay(states, actions, rewards, next_states, dones)
+
+            if step % 10 == 0:
+                print(
+                    f"{agent_type} Agents -> Episode: {episode}/{num_episodes}, progress: {episode/num_episodes}"
+                )
+
+            if done:
+                steps_per_episode.append(step + 1)
+                break
+
+        for agent in agents:
+            agent_rewards[agent.name].append(total_rewards[agent.name])
+
+        shared_agent.epsilon = max(
+            shared_agent.epsilon * shared_agent.epsilon_decay, shared_agent.epsilon_min
+        )
+
+        if episode % 500 == 0:
+            shared_agent.save(f"shared_{agent_type}.weights.h5")
+            shared_agent.update_target_model()
 
     env.close()

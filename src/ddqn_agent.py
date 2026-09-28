@@ -1,4 +1,4 @@
-from agent import Agent
+from base_agent import Agent
 from chip_game_env import ChipGameEnv, GameState
 
 
