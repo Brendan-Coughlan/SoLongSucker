@@ -1,34 +1,76 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def print_agent_statistics(
+    title: str,
     agent_rewards: dict[str, list[float]],
     steps_per_episode: list[int],
 ) -> None:
+    """Print summary statistics for agent rewards and episode lengths."""
 
-    # Convert reward histories into an array for statistical calculations.
+    # Combine rewards from all players across all episodes.
     rewards = np.array(
         list(agent_rewards.values()),
         dtype=float,
     )
 
-    # Combine all four agents' rewards into one total for each episode.
-    episode_rewards = rewards.sum(axis=0)
+    # Every individual player reward.
+    individual_rewards = rewards.flatten()
+
+    # Sum of all four player rewards for each episode.
+    episode_total_rewards = rewards.sum(axis=0)
+
+    # Mean reward across four players for each episode.
+    episode_mean_rewards = rewards.mean(axis=0)
+
+    print(
+        "Individual player rewards:",
+        np.mean(individual_rewards),
+        np.std(individual_rewards),
+    )
+
+    print(
+        "Episode total rewards:",
+        np.mean(episode_total_rewards),
+        np.std(episode_total_rewards),
+    )
+
+    print(
+        "Episode mean rewards:",
+        np.mean(episode_mean_rewards),
+        np.std(episode_mean_rewards),
+    )
+
+    # Last 1000 episodes only.
+    last_1000 = rewards[:, -1000:]
+
+    print(
+        "Last 1000 individual:",
+        np.mean(last_1000),
+        np.std(last_1000),
+    )
+
+    print(
+        "Last 1000 episode totals:",
+        np.mean(last_1000.sum(axis=0)),
+        np.std(last_1000.sum(axis=0)),
+    )
 
     steps = np.array(
         steps_per_episode,
         dtype=float,
     )
 
-    print("\nRandom Agent Performance")
+    print(f"\n{title}")
     print("-" * 60)
 
     print(
         f"Reward: "
-        f"{np.mean(episode_rewards):.2f} ± "
-        f"{np.std(episode_rewards):.2f} "
-        f"[{np.min(episode_rewards):.2f}, "
-        f"{np.max(episode_rewards):.2f}]"
+        f"{np.mean(rewards):.2f} ± "
+        f"{np.std(rewards):.2f} "
+        f"[{np.min(rewards):.2f}, "
+        f"{np.max(rewards):.2f}]"
     )
 
     print(
@@ -39,12 +81,13 @@ def print_agent_statistics(
         f"{np.max(steps):.0f}]"
     )
 
+
 def plot_agent_progress(
     agent_rewards: dict[str, list[float]],
     steps_per_episode: list[int],
     num_episodes: int,
     experiment_name: str,
-    plot_file_name: str
+    plot_file_name: str,
 ) -> None:
     # Create a 2x3 grid for the combined, individual, and step plots.
     fig, axs = plt.subplots(
@@ -74,7 +117,7 @@ def plot_agent_progress(
         y_axis: list[float] = rewards[:max_episodes:20]
 
         axs[0, 0].plot(
-            x_axis[:len(y_axis)],
+            x_axis[: len(y_axis)],
             y_axis,
             label=f"Agent {agent_name}",
             linewidth=1.5,
@@ -91,7 +134,6 @@ def plot_agent_progress(
     axs[0, 0].legend(fontsize=9)
     axs[0, 0].grid(alpha=0.3)
 
-
     # Individual Agent Rewards
     for i, (agent_name, rewards) in enumerate(agent_rewards.items()):
         # Assign each agent to one of the four remaining reward plots.
@@ -101,7 +143,7 @@ def plot_agent_progress(
         y_axis: list[float] = rewards[:max_episodes:20]
 
         axs[row, col].plot(
-            x_axis[:len(y_axis)],
+            x_axis[: len(y_axis)],
             y_axis,
             linewidth=1.5,
             alpha=0.85,
@@ -115,7 +157,6 @@ def plot_agent_progress(
         axs[row, col].set_xlabel("Episode")
         axs[row, col].set_ylabel("Total Reward")
         axs[row, col].grid(alpha=0.3)
-
 
     # Smoothed Steps Per Episode
 
@@ -160,7 +201,6 @@ def plot_agent_progress(
             transform=steps_ax.transAxes,
         )
         steps_ax.set_title("Smoothed Steps")
-
 
     # Plot Formatting
 

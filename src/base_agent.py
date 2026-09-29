@@ -7,11 +7,13 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
+from chip_game_env import GameState
+
 class BaseAgent:
     def __init__(self, name, state_size, action_size, **kwargs):
         self.name = name
-        self.state_size = state_size
-        self.action_size = action_size
+        self.state_size = int(state_size)
+        self.action_size = int(action_size)
         self.memory = []
         self.gamma = kwargs.get('gamma', 0.95)
         self.epsilon = kwargs.get('epsilon', 1.0)
@@ -46,13 +48,13 @@ class BaseAgent:
             return self.choose_best_action(act_values, env_state)
 
     def choose_random_action(self, env_state):
-        if env_state == "choose_pile":
+        if env_state == GameState.CHOOSE_PILE:
             return tf.random.uniform((), maxval=6, dtype=tf.int64)  # Assuming 6 rows
         else:
             return tf.random.uniform((), minval=6, maxval=self.action_size, dtype=tf.int64)
 
     def choose_best_action(self, act_values, env_state):
-        if env_state == "choose_pile":
+        if env_state == GameState.CHOOSE_PILE:
             return tf.cast(tf.argmax(act_values[0][:6]), tf.int64)  # Assuming 6 rows
         else:
             return tf.cast(tf.argmax(act_values[0][6:]) + 6, tf.int64)

@@ -1,54 +1,37 @@
 from chip_game_env import ChipGameEnv
-from random_agent import RandomAgent
-from simulation import play_game_with_multiple_agents, play_game_with_agents
-from analysis import plot_agent_progress, print_agent_statistics
+from simulation import play_random_games, train_dqn_agents
+from analysis import print_agent_statistics, plot_agent_progress
+
 
 if __name__ == "__main__":
-    # Set the number of games to run and the maximum length of each game.
+    # Experimental settings.
     NUM_EPISODES: int = 10000
-    MAX_STEPS: int = 500
+    MAX_STEPS: int = 200
+    BATCH_SIZE: int = 32
 
-    # Create the chip game environment shared by the agents.
+    # Create the game environment.
     env: ChipGameEnv = ChipGameEnv()
 
-    # Store the reward history for each agent across all episodes.
-    agent_rewards: dict[str, list[float]] = {
-        "A": [],
-        "B": [],
-        "C": [],
-        "D": [],
-    }
+#     # Train the random agent baseline
+#     agent_rewards, steps_per_episode = play_random_games(
+#         env=env,
+#         num_episodes=NUM_EPISODES,
+#         max_steps=MAX_STEPS
+#     )
 
-    # Create the random agents
-    # agents: list[RandomAgent] = [RandomAgent(name,) for name in agent_rewards.keys()]
+    # Train the shared DQN agent.
+    agent_rewards, steps_per_episode = train_dqn_agents(
+        env=env,
+        num_episodes=NUM_EPISODES,
+        max_steps=MAX_STEPS,
+        batch_size=BATCH_SIZE
+    )
 
-    # Store how many steps each episode takes to finish.
-    steps_per_episode: list[int] = []
+    # Print summary statistics from the completed experiment.
+    print_agent_statistics(
+        "DQN Performance",
+        agent_rewards,
+        steps_per_episode
+    )
 
-    # # Run the simulation and collect agent rewards and episode lengths.
-    # play_game_with_multiple_agents(
-    #     env=env,
-    #     agents=agents,
-    #     num_episodes=NUM_EPISODES,
-    #     max_steps=MAX_STEPS,
-    #     render=True,
-    #     agent_rewards=agent_rewards,
-    #     steps_per_episode=steps_per_episode,
-    # )
-
-    # # Print summary statistics from the completed simulation.
-    # print_agent_statistics(
-    #     agent_rewards,
-    #     steps_per_episode,
-    # )
-
-    # # Plot agent rewards and episode lengths over the experiment.
-    # plot_agent_progress(
-    #     agent_rewards=agent_rewards,
-    #     steps_per_episode=steps_per_episode,
-    #     num_episodes=NUM_EPISODES,
-    #     experiment_name="Random Agent Performance",
-    #     plot_file_name="data/random_agent_baseline.png"
-    # )
-
-play_game_with_agents(env, "DQN", num_episodes=10000, learning_rate=0.001, epsilon_decay=0.995)
+    plot_agent_progress(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")
