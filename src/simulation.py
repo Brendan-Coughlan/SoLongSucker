@@ -40,15 +40,17 @@ def play_random_games(
 
     with open(log_file_name, "w") as logfile:
         for episode in tqdm(range(num_episodes), desc="Random Agent", unit="episode"):
-            env.reset()
+            obs, _ = env.reset()
 
+            # Track each agent's total reward during the current episode.
             total_rewards: dict[str, float] = {name: 0.0 for name in player_names}
+
             for step in range(max_steps):
                 current_agent: RandomAgent = agents[env.current_player_index]
 
                 action: int = current_agent.choose_action(env)
 
-                _, step_rewards, done, _, info = env.step(action)
+                obs, step_rewards, done, _, info = env.step(action)
 
                 # Record the reward received by the acting agent.
                 agent_name: str = current_agent.name
@@ -62,16 +64,17 @@ def play_random_games(
                 if done:
                     break
 
-            # Store final results for the episode.
-            for agent in agents:
-                agent_rewards[agent.name].append(total_rewards[agent.name])
-            steps_per_episode.append(step + 1)
-
             # Find the remaining non-eliminated player.
             winner: str | None = next(
                 (player.letter for player in env.players if not player.eliminated),
                 None,
             )
+
+            # Store final results for the episode.
+            for agent in agents:
+                agent_rewards[agent.name].append(total_rewards[agent.name])
+    
+            steps_per_episode.append(step + 1)
 
             # print(f"Episode {episode + 1}/{num_episodes}:\nWinner = {winner},\nSteps = {step + 1}")
 
@@ -84,7 +87,7 @@ def train_dqn_agents(
     env: ChipGameEnv,
     num_episodes: int = 1000,
     max_steps: int = 200,
-    batch_size: int = 64,
+    batch_size: int = 32,
     **agent_params,
 ) -> tuple[dict[str, list[float]], list[int]]:
     """Train four game players using a single shared DQN agent."""
@@ -101,25 +104,19 @@ def train_dqn_agents(
 
     player_names: list[str] = ["A", "B", "C", "D"]
 
-    players: list[SharedAgentPlayer] = [
-        SharedAgentPlayer(name, shared_agent) for name in player_names
-    ]
+    players: list[SharedAgentPlayer] = [SharedAgentPlayer(name, shared_agent) for name in player_names]
 
-    agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
     steps_per_episode: list[int] = []
+    agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
 
-    completed_episodes = 0
     for episode in tqdm(range(num_episodes), desc="DQN Training", unit="episode"):
         obs, _ = env.reset()
-
         obs = np.reshape(obs, (1, state_size))
-
         total_rewards: dict[str, float] = {name: 0.0 for name in player_names}
+        
         for step in range(max_steps):
             current_player = players[env.current_player_index]
-            state = tf.convert_to_tensor(obs, dtype=tf.float32)
-            action = current_player.act(state, env.state)
-
+            action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state)
             next_obs, step_rewards, done, _, info = env.step(action)
             next_obs = np.reshape(next_obs, (1, state_size))
 
@@ -132,43 +129,18 @@ def train_dqn_agents(
 
             if len(shared_agent.memory) > batch_size and step % 10 == 0:
                 minibatch = random.sample(shared_agent.memory, batch_size)
-                states = tf.convert_to_tensor(
-                    np.array([transition[0] for transition in minibatch]).reshape(
-                        -1, state_size
-                    ),
-                    dtype=tf.float32,
-                )
-
-                actions = tf.convert_to_tensor(
-                    np.array([transition[1] for transition in minibatch]),
-                    dtype=tf.int64,
-                )
-
-                rewards = tf.convert_to_tensor(
-                    np.array([transition[2] for transition in minibatch]),
-                    dtype=tf.float32,
-                )
-
-                next_states = tf.convert_to_tensor(
-                    np.array([transition[3] for transition in minibatch]).reshape(
-                        -1, state_size
-                    ),
-                    dtype=tf.float32,
-                )
-
-                dones = tf.convert_to_tensor(
-                    np.array([transition[4] for transition in minibatch]),
-                    dtype=tf.float32,
-                )
+                states = tf.convert_to_tensor(np.array([t[0] for t in minibatch]).reshape(-1, state_size), dtype=tf.float32)
+                actions = tf.convert_to_tensor(np.array([t[1] for t in minibatch]), dtype=tf.int64)
+                rewards = tf.convert_to_tensor(np.array([t[2] for t in minibatch]), dtype=tf.float32)
+                next_states = tf.convert_to_tensor(np.array([t[3] for t in minibatch]).reshape(-1, state_size), dtype=tf.float32)
+                dones = tf.convert_to_tensor(np.array([t[4] for t in minibatch]), dtype=tf.float32)
 
                 shared_agent.replay(states, actions, rewards, next_states, dones)
-
+            
             if done:
-                completed_episodes += 1
+                steps_per_episode.append(step + 1)
                 break
-
-        steps_per_episode.append(step + 1)
-
+        
         for player in players:
             agent_rewards[player.name].append(total_rewards[player.name])
 
@@ -180,5 +152,4 @@ def train_dqn_agents(
 
     env.close()
 
-    print(f"Completed Episodes: {completed_episodes}/{num_episodes}")
     return agent_rewards, steps_per_episode

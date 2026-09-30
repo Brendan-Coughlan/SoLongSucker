@@ -12,12 +12,12 @@ if __name__ == "__main__":
     # Create the game environment.
     env: ChipGameEnv = ChipGameEnv()
 
-#     # Train the random agent baseline
-#     agent_rewards, steps_per_episode = play_random_games(
-#         env=env,
-#         num_episodes=NUM_EPISODES,
-#         max_steps=MAX_STEPS
-#     )
+    # Train the random agent baseline
+    # agent_rewards, steps_per_episode = play_random_games(
+    #     env=env,
+    #     num_episodes=NUM_EPISODES,
+    #     max_steps=MAX_STEPS
+    # )
 
     # Train the shared DQN agent.
     agent_rewards, steps_per_episode = train_dqn_agents(
@@ -34,4 +34,4 @@ if __name__ == "__main__":
         steps_per_episode
     )
 
-    plot_agent_progress(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")
+    # plot_agent_progress(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")

@@ -131,7 +131,7 @@ class ChipGameEnv(gym.Env):
             observation: np.ndarray = self._get_obs()
             info["winner"] = winner
             info["log"] = step_log
-            return observation, step_rewards, self.done, False, info
+            return observation, 0, self.done, False, info
 
         self.steps_num += 1
 
@@ -250,7 +250,7 @@ class ChipGameEnv(gym.Env):
             )
 
             # The last non-eliminated player receives the winning reward.
-            if winner is not None:
+            if winner:
                 winner.reward += 15.0
                 step_rewards[winner.letter] += 15.0
                 step_log.append(f"Winner ({winner.letter}) reward: 15\n")
@@ -292,14 +292,12 @@ class ChipGameEnv(gym.Env):
 
         # Player chips
         offset: int = self.NUM_PILES * self.NUM_PLAYERS * max_pile_size
-
         for i, player in enumerate(self.players):
             for j, letter in enumerate(self.PLAYER_LETTERS):
                 observation[offset + i * self.NUM_PLAYERS + j] = player.chips[letter]
 
         # Dead chips
         offset += self.NUM_PLAYERS * self.NUM_PLAYERS
-
         for i, player in enumerate(self.players):
             observation[offset + i] = player.dead_chips
 
@@ -309,7 +307,6 @@ class ChipGameEnv(gym.Env):
 
         # Game state
         offset += self.NUM_PLAYERS
-
         state_index: int = list(GameState).index(self.state)
         observation[offset + state_index] = 1
 

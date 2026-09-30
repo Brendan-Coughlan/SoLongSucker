@@ -15,47 +15,8 @@ def print_agent_statistics(
         dtype=float,
     )
 
-    # Every individual player reward.
-    individual_rewards = rewards.flatten()
-
-    # Sum of all four player rewards for each episode.
-    episode_total_rewards = rewards.sum(axis=0)
-
-    # Mean reward across four players for each episode.
-    episode_mean_rewards = rewards.mean(axis=0)
-
-    print(
-        "Individual player rewards:",
-        np.mean(individual_rewards),
-        np.std(individual_rewards),
-    )
-
-    print(
-        "Episode total rewards:",
-        np.mean(episode_total_rewards),
-        np.std(episode_total_rewards),
-    )
-
-    print(
-        "Episode mean rewards:",
-        np.mean(episode_mean_rewards),
-        np.std(episode_mean_rewards),
-    )
-
-    # Last 1000 episodes only.
-    last_1000 = rewards[:, -1000:]
-
-    print(
-        "Last 1000 individual:",
-        np.mean(last_1000),
-        np.std(last_1000),
-    )
-
-    print(
-        "Last 1000 episode totals:",
-        np.mean(last_1000.sum(axis=0)),
-        np.std(last_1000.sum(axis=0)),
-    )
+    # Combine all four agents' rewards into one total for each episode.
+    episode_rewards = rewards.sum(axis=0)
 
     steps = np.array(
         steps_per_episode,
@@ -67,10 +28,10 @@ def print_agent_statistics(
 
     print(
         f"Reward: "
-        f"{np.mean(rewards):.2f} ± "
-        f"{np.std(rewards):.2f} "
-        f"[{np.min(rewards):.2f}, "
-        f"{np.max(rewards):.2f}]"
+        f"{np.mean(episode_rewards):.2f} ± "
+        f"{np.std(episode_rewards):.2f} "
+        f"[{np.min(episode_rewards):.2f}, "
+        f"{np.max(episode_rewards):.2f}]"
     )
 
     print(

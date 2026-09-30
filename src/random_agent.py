@@ -11,9 +11,9 @@ class RandomAgent:
         """Choose a random action based on the current game state."""
 
         if env.state == GameState.CHOOSE_PILE:
-            return random.randrange(env.NUM_PILES)
+            return random.randint(0, env.NUM_PILES - 1)
 
-        return random.randrange(
+        return random.randint(
             env.NUM_PILES,
-            env.action_space.n,
+            env.action_space.n - 1
         )

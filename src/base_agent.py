@@ -6,7 +6,6 @@ from tensorflow.keras.models import Model
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-
 from chip_game_env import GameState
 
 class BaseAgent:
