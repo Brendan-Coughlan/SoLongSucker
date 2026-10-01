@@ -181,3 +181,27 @@ def plot_agent_progress(
     )
 
     plt.show()
+
+def plot_agent_statistics(agent_name: str, rewards: list[float], steps_per_episode: list[int], num_episodes: int, plot_file_name: str) -> None:
+    """Plot the agent's rewards and steps per episode."""
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Plot rewards
+    axs[0].plot(range(num_episodes), rewards, label=f"{agent_name} Rewards")
+    axs[0].set_title(f"{agent_name} Rewards Over Episodes")
+    axs[0].set_xlabel("Episode")
+    axs[0].set_ylabel("Reward")
+    axs[0].legend()
+    axs[0].grid(alpha=0.3)
+
+    # Plot steps per episode
+    axs[1].plot(range(num_episodes), steps_per_episode, label=f"{agent_name} Steps", color='orange')
+    axs[1].set_title(f"{agent_name} Steps Per Episode")
+    axs[1].set_xlabel("Episode")
+    axs[1].set_ylabel("Steps")
+    axs[1].legend()
+    axs[1].grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(plot_file_name, dpi=300)
+    plt.show()

@@ -1,11 +1,11 @@
 from chip_game_env import ChipGameEnv
 from simulation import play_random_games, train_agents
-from analysis import print_agent_statistics, plot_agent_progress
+from analysis import print_agent_statistics, plot_agent_progress, plot_agent_statistics
 
 
 if __name__ == "__main__":
     # Experimental settings.
-    NUM_EPISODES: int = 10000
+    NUM_EPISODES: int = 1000
     MAX_STEPS: int = 200
     BATCH_SIZE: int = 32
 
@@ -36,3 +36,4 @@ if __name__ == "__main__":
     )
 
     # plot_agent_progress(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")
+    plot_agent_statistics("DDQN", agent_rewards, steps_per_episode, NUM_EPISODES, "data/ddqn_agent.png")
