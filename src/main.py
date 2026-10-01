@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # Print summary statistics from the completed experiment.
     print_agent_statistics(
-        "DQN Performance",
+        "DDQN Performance",
         agent_rewards,
         steps_per_episode
     )

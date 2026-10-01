@@ -8,6 +8,7 @@ from tqdm import tqdm
 from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
 from dqn_agent import DQNAgent
+from ddqn_agent import DDQNAgent
 from random_agent import RandomAgent
 
 
@@ -95,7 +96,7 @@ def train_dqn_agents(
     state_size: int = env.observation_space.shape[0]
     action_size: int = env.action_space.n
 
-    shared_agent = DQNAgent(
+    shared_agent = DDQNAgent(
         "Shared",
         state_size,
         action_size,
