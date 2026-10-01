@@ -85,8 +85,9 @@ def play_random_games(
     return agent_rewards, steps_per_episode
 
 
-def train_dqn_agents(
+def train_agents(
     env: ChipGameEnv,
+    agent_type: str = "DQN",
     num_episodes: int = 1000,
     max_steps: int = 200,
     batch_size: int = 32,
@@ -97,7 +98,14 @@ def train_dqn_agents(
     state_size: int = env.observation_space.shape[0]
     action_size: int = env.action_space.n
 
-    shared_agent = DuelingDQNAgent(
+    if agent_type == "DQN":
+        AgentClass = DQNAgent
+    elif agent_type == "DDQN":
+        AgentClass = DDQNAgent
+    elif agent_type == "DuelingDQN":
+        AgentClass = DuelingDQNAgent
+
+    shared_agent = AgentClass(
         "Shared",
         state_size,
         action_size,
@@ -111,7 +119,7 @@ def train_dqn_agents(
     steps_per_episode: list[int] = []
     agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
 
-    for episode in tqdm(range(num_episodes), desc="DQN Training", unit="episode"):
+    for episode in tqdm(range(num_episodes), desc=f"{agent_type} Training", unit="episode"):
         obs, _ = env.reset()
         obs = np.reshape(obs, (1, state_size))
         total_rewards: dict[str, float] = {name: 0.0 for name in player_names}

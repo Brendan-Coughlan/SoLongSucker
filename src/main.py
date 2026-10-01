@@ -1,5 +1,5 @@
 from chip_game_env import ChipGameEnv
-from simulation import play_random_games, train_dqn_agents
+from simulation import play_random_games, train_agents
 from analysis import print_agent_statistics, plot_agent_progress
 
 
@@ -20,8 +20,9 @@ if __name__ == "__main__":
     # )
 
     # Train the shared DQN agent.
-    agent_rewards, steps_per_episode = train_dqn_agents(
+    agent_rewards, steps_per_episode = train_agents(
         env=env,
+        agent_type="DuelingDQN",
         num_episodes=NUM_EPISODES,
         max_steps=MAX_STEPS,
         batch_size=BATCH_SIZE
