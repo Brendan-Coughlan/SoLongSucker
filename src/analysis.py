@@ -187,7 +187,8 @@ def plot_agent_statistics(agent_name: str, rewards: list[float], steps_per_episo
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
     # Plot rewards
-    axs[0].plot(range(num_episodes), rewards, label=f"{agent_name} Rewards")
+    for agent_name, agent_rewards in rewards.items():
+        axs[0].plot(range(num_episodes), agent_rewards, label=f"{agent_name} Rewards", alpha=0.1, color='blue')
     axs[0].set_title(f"{agent_name} Rewards Over Episodes")
     axs[0].set_xlabel("Episode")
     axs[0].set_ylabel("Reward")
