@@ -5,7 +5,7 @@ from analysis import print_agent_statistics, plot_agent_progress, plot_agent_sta
 
 if __name__ == "__main__":
     # Experimental settings.
-    NUM_EPISODES: int = 1000
+    NUM_EPISODES: int = 10000
     MAX_STEPS: int = 200
     BATCH_SIZE: int = 32
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # Train the shared DQN agent.
     agent_rewards, steps_per_episode = train_agents(
         env=env,
-        agent_type="DuelingDQN",
+        agent_type="DQN",
         num_episodes=NUM_EPISODES,
         max_steps=MAX_STEPS,
         batch_size=BATCH_SIZE
@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
     # Print summary statistics from the completed experiment.
     print_agent_statistics(
-        "DDQN Performance",
+        "DQN Performance",
         agent_rewards,
         steps_per_episode
     )
 
     # plot_agent_progress(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")
-    plot_agent_statistics("DDQN", agent_rewards, steps_per_episode, NUM_EPISODES, "data/ddqn_agent.png")
+    plot_agent_statistics(agent_rewards, steps_per_episode, NUM_EPISODES, "DQN", "data/dqn_agent.png")
