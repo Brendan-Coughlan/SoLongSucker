@@ -5,6 +5,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
 
 from base_agent import BaseAgent
+from chip_game_env import GameState
 
 
 class A2CAgent(BaseAgent):
@@ -33,7 +34,7 @@ class A2CAgent(BaseAgent):
             return self.choose_random_action(env_state)
 
         policy = self.actor.predict(state, verbose=0)[0]
-        if env_state == "choose_pile":
+        if env_state == GameState.CHOOSE_PILE:
             return np.argmax(policy[:6])
         else:
             return np.argmax(policy[6:]) + 6
@@ -61,7 +62,7 @@ class A2CAgent(BaseAgent):
         self.critic.save_weights(f"_critic{name}")
 
     def choose_random_action(self, env_state):
-        if env_state == "choose_pile":
-            return np.random.randint(0, 6)  # Assuming 6 rows
+        if env_state == GameState.CHOOSE_PILE:
+            return np.random.randint(0, 6)  # Assuming 6 piles
         else:
             return np.random.randint(6, self.action_size)
