@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, Add, Subtract, Layer
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
