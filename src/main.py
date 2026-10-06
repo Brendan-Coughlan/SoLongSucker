@@ -2,6 +2,30 @@ from chip_game_env import ChipGameEnv
 from simulation import play_random_games, train_agents
 from analysis import print_agent_statistics, plot_agent_statistics
 
+def run_agent_experiment(agent_type: str, num_episodes: int, max_steps: int, batch_size: int, plot: bool = True, print_stats: bool = True):
+    # Create the game environment.
+    env: ChipGameEnv = ChipGameEnv()
+
+    # Train the specified agent type.
+    agent_rewards, steps_per_episode = train_agents(
+        env=env,
+        agent_type=agent_type,
+        num_episodes=num_episodes,
+        max_steps=max_steps,
+        batch_size=batch_size
+    )
+
+    # Print summary statistics from the completed experiment.
+    if print_stats:
+        print_agent_statistics(
+            f"{agent_type} Performance",
+            agent_rewards,
+            steps_per_episode
+        )
+
+    # Plot agent stats for the specified agent type.
+    if plot:
+        plot_agent_statistics(agent_rewards, steps_per_episode, num_episodes, agent_type, f"data/{agent_type}_performance.png")
 
 if __name__ == "__main__":
     # Experimental settings.
@@ -9,24 +33,6 @@ if __name__ == "__main__":
     MAX_STEPS: int = 200
     BATCH_SIZE: int = 32
 
-    # Create the game environment.
-    env: ChipGameEnv = ChipGameEnv()
-
-    # Train the shared agent.
-    agent_rewards, steps_per_episode = train_agents(
-        env=env,
-        agent_type="PPO",
-        num_episodes=NUM_EPISODES,
-        max_steps=MAX_STEPS,
-        batch_size=BATCH_SIZE
-    )
-
-    # Print summary statistics from the completed experiment.
-    print_agent_statistics(
-        f"PPO Performance",
-        agent_rewards,
-        steps_per_episode
-    )
-
-    # Plot agent stats for random
-    plot_agent_statistics(agent_rewards, steps_per_episode, NUM_EPISODES, "PPO", f"data/PPO_performance.png")
+    # Run experiments for different agent types.
+    for agent in ["DQN", "DDQN", "DuelingDQN", "A2C", "A3C", "PPO"]:
+        run_agent_experiment(agent, NUM_EPISODES, MAX_STEPS, BATCH_SIZE)
