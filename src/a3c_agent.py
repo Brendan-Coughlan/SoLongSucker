@@ -71,12 +71,12 @@ class A3CAgent(BaseAgent):
         pass
 
     def load(self, name):
-        self.actor.load_weights(f"{name}_actor")
-        self.critic.load_weights(f"{name}_critic")
+        self.actor.load_weights(f"_actor{name}")
+        self.critic.load_weights(f"_critic{name}")
 
     def save(self, name):
-        self.actor.save_weights(f"{name}_actor")
-        self.critic.save_weights(f"{name}_critic")
+        self.actor.save_weights(f"_actor{name}")
+        self.critic.save_weights(f"_critic{name}")
 
     def choose_random_action(self, env_state):
         if env_state == GameState.CHOOSE_PILE:

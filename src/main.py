@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # Train the shared agent.
     agent_rewards, steps_per_episode = train_agents(
         env=env,
-        agent_type="A2C",
+        agent_type="PPO",
         num_episodes=NUM_EPISODES,
         max_steps=MAX_STEPS,
         batch_size=BATCH_SIZE
@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
     # Print summary statistics from the completed experiment.
     print_agent_statistics(
-        f"A2C Performance",
+        f"PPO Performance",
         agent_rewards,
         steps_per_episode
     )
 
     # Plot agent stats for random
-    plot_agent_statistics(agent_rewards, steps_per_episode, NUM_EPISODES, "A2C", f"data/A2C_performance.png")
+    plot_agent_statistics(agent_rewards, steps_per_episode, NUM_EPISODES, "PPO", f"data/PPO_performance.png")
