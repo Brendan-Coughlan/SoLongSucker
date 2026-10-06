@@ -1,8 +1,12 @@
 from chip_game_env import ChipGameEnv
 from simulation import play_random_games, train_agents
 from analysis import print_agent_statistics, plot_agent_statistics
+import os
 
-def run_agent_experiment(agent_type: str, num_episodes: int, max_steps: int, batch_size: int, plot: bool = True, print_stats: bool = True):
+def run_agent_experiment(agent_type: str, num_episodes: int, max_steps: int, batch_size: int, plot: bool = True, print_stats: bool = True, use_gpu: bool = False):
+    if not use_gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU usage.   
+
     # Create the game environment.
     env: ChipGameEnv = ChipGameEnv()
 
