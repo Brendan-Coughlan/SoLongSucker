@@ -4,7 +4,7 @@ import pygame
 import numpy as np
 import random
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Optional
 
 
 class GameState(Enum):
@@ -83,8 +83,8 @@ class ChipGameEnv(gym.Env):
 
     def reset(
         self,
-        seed: int | None = None,
-        options: dict[str, Any] | None = None,
+        seed: Optional[int] = None,
+        options: Optional[dict[str, Any]] = None,
     ) -> tuple[np.ndarray, dict[str, Any]]:
         super().reset(seed=seed)
 
@@ -96,7 +96,7 @@ class ChipGameEnv(gym.Env):
         self.current_player_index: int = random.randint(0, self.NUM_PLAYERS - 1)
         self.piles: list[list[str]] = [[] for _ in range(self.NUM_PILES)]
         self.state: GameState = GameState.CHOOSE_PILE
-        self.last_played_pile: int | None = None
+        self.last_played_pile: Optional[int] = None
         self.turn_history: list[Player] = [self.players[0]]
         self.eligible_next_players: list[Player] = []
         self.done: bool = False
@@ -120,7 +120,7 @@ class ChipGameEnv(gym.Env):
         action: int,
     ) -> tuple[np.ndarray, dict[str, float], bool, bool, dict[str, Any]]:
         info: dict[str, Any] = {}
-        winner: Player | None = None
+        winner: Optional[Player] = None
         step_log: list[str] = []
 
         # Track rewards produced by this action for each player.
@@ -335,7 +335,7 @@ class ChipGameEnv(gym.Env):
 
             # Two matching chips on top of a pile trigger a capture.
             if self._check_capture(pile):
-                benefitting_player: Player | None = next(
+                benefitting_player: Optional[Player] = next(
                     (player for player in self.players if player.letter == chip_letter),
                     None,
                 )
@@ -348,7 +348,7 @@ class ChipGameEnv(gym.Env):
                 # If that player is eliminated, move the pile's chips to the dead zone.
                 else:
                     for chip in self.piles[self.last_played_pile]:
-                        player: Player | None = next(
+                        player: Optional[Player] = next(
                             (
                                 player
                                 for player in self.players
@@ -478,7 +478,7 @@ class ChipGameEnv(gym.Env):
 
         # Only a chip actually present in the captured pile can be eliminated.
         if chip_letter in captured_pile:
-            player: Player | None = next(
+            player: Optional[Player] = next(
                 (p for p in self.players if p.letter == chip_letter),
                 None,
             )
