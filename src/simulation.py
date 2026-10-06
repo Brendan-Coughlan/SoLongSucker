@@ -13,6 +13,7 @@ from dueling_dqn_agent import DuelingDQNAgent
 from random_agent import RandomAgent
 from a2c_agent import A2CAgent
 from a3c_agent import A3CAgent
+from ppo_agent import PPOAgent
 
 
 class SharedAgentPlayer:
@@ -110,6 +111,11 @@ def train_agents(
         AgentClass = A2CAgent
     elif agent_type == "A3C":
         AgentClass = A3CAgent
+    elif agent_type == "PPO":
+        AgentClass = PPOAgent
+    else:
+        raise ValueError(f"Unknown agent type: {agent_type}")
+
     shared_agent = AgentClass(
         "Shared",
         state_size,
