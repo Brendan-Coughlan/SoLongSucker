@@ -12,6 +12,7 @@ from ddqn_agent import DDQNAgent
 from dueling_dqn_agent import DuelingDQNAgent
 from random_agent import RandomAgent
 from a2c_agent import A2CAgent
+from a3c_agent import A3CAgent
 
 
 class SharedAgentPlayer:
@@ -107,6 +108,8 @@ def train_agents(
         AgentClass = DuelingDQNAgent
     elif agent_type == "A2C":
         AgentClass = A2CAgent
+    elif agent_type == "A3C":
+        AgentClass = A3CAgent
     shared_agent = AgentClass(
         "Shared",
         state_size,
