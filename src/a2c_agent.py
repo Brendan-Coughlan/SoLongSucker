@@ -40,14 +40,49 @@ class A2CAgent(BaseAgent):
             return np.argmax(policy[6:]) + 6
 
     def replay(self, states, actions, rewards, next_states, dones):
-        values = self.critic.predict(states, verbose=0)
-        next_values = self.critic.predict(next_states, verbose=0)
+        # Convert everything to predictable NumPy shapes/types
+        states = np.asarray(states, dtype=np.float32)
+        next_states = np.asarray(next_states, dtype=np.float32)
 
-        advantages = rewards + self.gamma * next_values * (1 - dones) - values
+        actions = np.asarray(actions, dtype=np.int32).reshape(-1)
+        rewards = np.asarray(rewards, dtype=np.float32).reshape(-1)
+        dones = np.asarray(dones, dtype=np.float32).reshape(-1)
 
-        actor_targets = tf.one_hot(actions, self.action_size)
-        self.actor.train_on_batch(states, actor_targets, sample_weight=advantages)
-        self.critic.train_on_batch(states, rewards + self.gamma * next_values * (1 - dones))
+        # Critic outputs (batch_size, 1), so flatten to (batch_size,)
+        values = self.critic.predict(states, verbose=0).reshape(-1)
+        next_values = self.critic.predict(
+            next_states,
+            verbose=0
+        ).reshape(-1)
+
+        # TD target:
+        # reward + discounted value of next state unless terminal
+        td_targets = (
+            rewards
+            + self.gamma * next_values * (1.0 - dones)
+        )
+
+        # A(s,a) = TD target - V(s)
+        advantages = td_targets - values
+
+        # One-hot encode selected actions
+        actor_targets = tf.one_hot(
+            actions,
+            depth=self.action_size
+        )
+
+        # Train policy using advantage as sample weight
+        self.actor.train_on_batch(
+            states,
+            actor_targets,
+            sample_weight=advantages
+        )
+
+        # Critic learns the TD target
+        self.critic.train_on_batch(
+            states,
+            td_targets
+        )
 
     def update_target_model(self):
         # A2C doesn't use a target model, so this method can be empty or just pass

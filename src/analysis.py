@@ -48,6 +48,7 @@ def plot_agent_statistics(
     num_episodes: int,
     experiment_name: str,
     plot_file_name: str,
+    render_plots: bool = True,
 ) -> None:
     """Plot total rewards and steps per episode."""
 
@@ -174,4 +175,5 @@ def plot_agent_statistics(
         bbox_inches="tight",
     )
 
-    plt.show()
+    if render_plots:
+        plt.show()
