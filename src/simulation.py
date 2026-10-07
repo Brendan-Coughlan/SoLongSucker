@@ -106,22 +106,22 @@ def train_agents(
     action_size: int = env.action_space.n
 
     if agent_type == "DQN":
-        AgentClass = DQNAgent("DQN", state_size, action_size, **agent_params)
+        AgentClass = DQNAgent
     elif agent_type == "DDQN":
-        AgentClass = DDQNAgent("DDQN", state_size, action_size, **agent_params)
+        AgentClass = DDQNAgent
     elif agent_type == "DuelingDQN":
-        AgentClass = DuelingDQNAgent("DuelingDQN", state_size, action_size, **agent_params)
+        AgentClass = DuelingDQNAgent
     elif agent_type == "A2C":
-        AgentClass = A2CAgent("A2C", state_size, action_size, **agent_params)
+        AgentClass = A2CAgent
     elif agent_type == "A3C":
-        AgentClass = A3CAgent("A3C", state_size, action_size, **agent_params)
+        AgentClass = A3CAgent
     elif agent_type == "PPO":
-        AgentClass = PPOAgent("PPO", state_size, action_size, **agent_params)
+        AgentClass = PPOAgent
     else:
         raise ValueError(f"Unknown agent type: {agent_type}")
 
     shared_agent = AgentClass(
-        "Shared",
+        f"shared_{agent_type}",
         state_size,
         action_size,
         **agent_params,
@@ -172,7 +172,7 @@ def train_agents(
         shared_agent.epsilon = max(shared_agent.epsilon * shared_agent.epsilon_decay, shared_agent.epsilon_min)
 
         if episode % 500 == 0:
-            shared_agent.save("shared_DQN.weights.h5")
+            shared_agent.save(f"shared_{agent_type}.weights.h5")
             shared_agent.update_target_model()
 
     env.close()
