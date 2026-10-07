@@ -106,17 +106,17 @@ def train_agents(
     action_size: int = env.action_space.n
 
     if agent_type == "DQN":
-        AgentClass = DQNAgent
+        AgentClass = DQNAgent("DQN", state_size, action_size, **agent_params)
     elif agent_type == "DDQN":
-        AgentClass = DDQNAgent
+        AgentClass = DDQNAgent("DDQN", state_size, action_size, **agent_params)
     elif agent_type == "DuelingDQN":
-        AgentClass = DuelingDQNAgent
+        AgentClass = DuelingDQNAgent("DuelingDQN", state_size, action_size, **agent_params)
     elif agent_type == "A2C":
-        AgentClass = A2CAgent
+        AgentClass = A2CAgent("A2C", state_size, action_size, **agent_params)
     elif agent_type == "A3C":
-        AgentClass = A3CAgent
+        AgentClass = A3CAgent("A3C", state_size, action_size, **agent_params)
     elif agent_type == "PPO":
-        AgentClass = PPOAgent
+        AgentClass = PPOAgent("PPO", state_size, action_size, **agent_params)
     else:
         raise ValueError(f"Unknown agent type: {agent_type}")
 

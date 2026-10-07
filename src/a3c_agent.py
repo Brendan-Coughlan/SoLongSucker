@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Input
@@ -71,12 +72,14 @@ class A3CAgent(BaseAgent):
         pass
 
     def load(self, name):
-        self.actor.load_weights(f"_actor{name}")
-        self.critic.load_weights(f"_critic{name}")
+        self.actor.load_weights(f"models/{name}_actor.h5")
+        self.critic.load_weights(f"models/{name}_critic.h5")
 
     def save(self, name):
-        self.actor.save_weights(f"_actor{name}")
-        self.critic.save_weights(f"_critic{name}")
+        Path("models").mkdir(parents=True, exist_ok=True)
+
+        self.actor.save_weights(f"models/{name}_actor.h5")
+        self.critic.save_weights(f"models/{name}_critic.h5")
 
     def choose_random_action(self, env_state):
         if env_state == GameState.CHOOSE_PILE:

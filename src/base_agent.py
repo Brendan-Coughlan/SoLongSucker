@@ -1,3 +1,4 @@
+from pathlib import Path
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, Add, Subtract, Layer
@@ -63,7 +64,10 @@ class BaseAgent:
         pass
 
     def load(self, name):
-        self.model.load_weights(name)
+        self.model.load_weights(f"models/{name}_weights.h5")
 
     def save(self, name):
-        self.model.save_weights(name)
+        file_name = f"models/{name}_weights.h5"
+        Path(file_name).parent.mkdir(parents=True, exist_ok=True)
+
+        self.model.save_weights(file_name)
