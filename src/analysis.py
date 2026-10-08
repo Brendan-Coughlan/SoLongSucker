@@ -138,7 +138,8 @@ def plot_agent_statistics(
         steps,
         label="Steps Per Episode",
         linewidth=0.8,
-        alpha=0.15,
+        color="green",
+        alpha=0.5
     )
 
     axs[1].plot(
@@ -146,6 +147,7 @@ def plot_agent_statistics(
         smoothed_steps,
         label="Smoothed Steps",
         linewidth=2,
+        color="green"
     )
 
     axs[1].set_title(

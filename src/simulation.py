@@ -3,7 +3,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import random
-
+import time
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
@@ -134,12 +134,24 @@ def train_agents(
     steps_per_episode: list[int] = []
     agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
 
-    for episode in tqdm(range(num_episodes), desc=f"{agent_type} Training", unit="episode"):
+    training_start = time.perf_counter()
+    total_steps = 0
+
+    progress_bar = tqdm(
+        range(num_episodes),
+        desc=f"{agent_type} Training",
+        unit="episode"
+    )
+
+    for episode in progress_bar:
+        episode_start = time.perf_counter()
         obs, _ = env.reset()
         obs = np.reshape(obs, (1, state_size))
         total_rewards: dict[str, float] = {name: 0.0 for name in player_names}
         
         for step in range(max_steps):
+            total_steps += 1
+
             current_player = players[env.current_player_index]
             action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state)
             next_obs, step_rewards, done, _, info = env.step(action)
@@ -174,6 +186,29 @@ def train_agents(
         if episode % 500 == 0:
             shared_agent.save(f"shared_{agent_type}.weights.h5")
             shared_agent.update_target_model()
+
+        elapsed = time.perf_counter() - training_start
+        episode_time = time.perf_counter() - episode_start
+
+        episodes_per_sec = (episode + 1) / max(elapsed, 1e-9)
+        steps_per_sec = total_steps / max(elapsed, 1e-9)
+
+        progress_bar.set_postfix({
+            "ep/s": f"{episodes_per_sec:.2f}",
+            "steps/s": f"{steps_per_sec:.1f}",
+            "ep_time": f"{episode_time:.2f}s",
+            "elapsed": f"{elapsed / 60:.1f}m"
+        })
+
+    total_time = time.perf_counter() - training_start
+
+    print(f"\n{agent_type} Training Summary")
+    print("-" * 60)
+    print(f"Total time: {total_time:.2f} seconds")
+    print(f"Episodes: {num_episodes}")
+    print(f"Total steps: {total_steps}")
+    print(f"Episodes/sec: {num_episodes / max(total_time, 1e-9):.2f}")
+    print(f"Steps/sec: {total_steps / max(total_time, 1e-9):.2f}")
 
     env.close()
 

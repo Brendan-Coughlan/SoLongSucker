@@ -33,7 +33,7 @@ def run_agent_experiment(agent_type: str, num_episodes: int, max_steps: int, bat
 
 if __name__ == "__main__":
     # Experimental settings.
-    NUM_EPISODES: int = 100
+    NUM_EPISODES: int = 10000
     MAX_STEPS: int = 200
     BATCH_SIZE: int = 32
 
