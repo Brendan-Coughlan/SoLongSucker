@@ -10,10 +10,15 @@ def run_agent_experiment(agent_type: str, num_episodes: int, max_steps: int, bat
     # Create the game environment.
     env: ChipGameEnv = ChipGameEnv()
 
-    # Train the specified agent type.
-    agent_rewards, steps_per_episode = train_agents(
-        env=env,
-        agent_type=agent_type,
+    agent_rewards, steps_per_episode = [], []
+    if agent_type == "Random":
+        # Play random games and collect rewards and steps per episode.
+        agent_rewards, steps_per_episode = play_random_games(env, num_episodes, max_steps)
+    else:
+        # Train the specified agent type.
+        agent_rewards, steps_per_episode = train_agents(
+            env=env,
+            agent_type=agent_type,
         num_episodes=num_episodes,
         max_steps=max_steps,
         batch_size=batch_size
@@ -38,5 +43,5 @@ if __name__ == "__main__":
     BATCH_SIZE: int = 32
 
     # Run experiments for different agent types.
-    for agent in ["DQN", "DDQN", "DuelingDQN", "A2C", "A3C", "PPO"]:
+for agent in ["DQN"]:
         run_agent_experiment(agent, NUM_EPISODES, MAX_STEPS, BATCH_SIZE, use_gpu=False, plot=True, render_plots=False, print_stats=True)
