@@ -1,109 +1,122 @@
-import os
+# ============================================================
+# Environment Configuration
+# ============================================================
 
+import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# ============================================================
+# Imports
+# ============================================================
 
 import random
 import time
 from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
 from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
+
+# Value-based agents
 from dqn_agent import DQNAgent
 from ddqn_agent import DDQNAgent
 from dueling_dqn_agent import DuelingDQNAgent
+
+# Random baseline
 from random_agent import RandomAgent
+
+# Actor-critic agents
 from a2c_agent import A2CAgent
 from a3c_agent import A3CAgent
 from ppo_agent import PPOAgent
 
+# ============================================================
+# Shared Agent Player
+# ============================================================
 
 class SharedAgentPlayer:
     """Represents a game player using a shared learning agent."""
 
-    def __init__(self, name: str, shared_agent: BaseAgent) -> None:
+    def __init__(self, name: str, shared_agent: BaseAgent):
         self.name = name
         self.shared_agent = shared_agent
 
-    def act(self, state: tf.Tensor, env_state) -> tf.Tensor:
+    def act(self, state: tf.Tensor, env_state):
+        """Delegate action selection to the shared agent."""
         return self.shared_agent.act(state, env_state)
 
+# ============================================================
+# Shared Helper Functions
+# ============================================================
 
-def play_random_games(
-    env: ChipGameEnv,
-    num_episodes: int = 1000,
-    max_steps: int = 500,
-    log_file_name: str = "data/random_game_log.txt",
+def create_reward_history(player_names):
+    """Initialize reward histories for all players."""
+    return {name: [] for name in player_names}
+
+def create_episode_rewards(player_names):
+    """Initialize cumulative rewards for a single episode."""
+    return {name: 0.0 for name in player_names}
+
+def record_episode_rewards(agent_rewards, total_rewards, players):
+    """Append each player's episode reward to its history."""
+    for player in players:
+        agent_rewards[player.name].append(total_rewards[player.name])
+
+def update_episode_rewards(total_rewards, step_rewards, players):
+    """Accumulate the step rewards of all learning players."""
+    for player in players:
+        total_rewards[player.name] += step_rewards[player.name]
+
+def print_training_summary(agent_type, num_episodes, total_steps, training_start):
+    """Display overall training performance statistics."""
+
+    total_time = time.perf_counter() - training_start
+
+    print(f"\n{agent_type} Training Summary")
+    print("-" * 60)
+    print(f"Total time: {total_time:.2f} seconds")
+    print(f"Episodes: {num_episodes}")
+    print(f"Total steps: {total_steps}")
+    print(
+        f"Episodes/sec: "
+        f"{num_episodes / max(total_time, 1e-9):.2f}"
+    )
+    print(
+        f"Steps/sec: "
+        f"{total_steps / max(total_time, 1e-9):.2f}"
+    )
+
+def update_training_progress(
+    progress_bar,
+    episode,
+    episode_start,
+    training_start,
+    total_steps,
 ):
-    """Run games using four random agents and record their results."""
+    """Update the progress bar with training speed and timing."""
 
-    Path(log_file_name).parent.mkdir(parents=True, exist_ok=True)
+    elapsed = time.perf_counter() - training_start
+    episode_time = time.perf_counter() - episode_start
 
-    player_names: list[str] = ["A", "B", "C", "D"]
-    agents: list[RandomAgent] = [RandomAgent(name) for name in player_names]
+    episodes_per_sec = (episode + 1) / max(elapsed, 1e-9)
+    steps_per_sec = total_steps / max(elapsed, 1e-9)
 
-    agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
-    steps_per_episode: list[int] = []
+    progress_bar.set_postfix({
+        "ep/s": f"{episodes_per_sec:.2f}",
+        "steps/s": f"{steps_per_sec:.1f}",
+        "ep_time": f"{episode_time:.2f}s",
+        "elapsed": f"{elapsed / 60:.1f}m",
+    })
 
-    with open(log_file_name, "w") as logfile:
-        for episode in tqdm(range(num_episodes), desc="Random Agent", unit="episode"):
-            obs, _ = env.reset()
+# ============================================================
+# Agent Initialization Helpers
+# ============================================================
 
-            # Track each agent's total reward during the current episode.
-            total_rewards: dict[str, float] = {name: 0.0 for name in player_names}
-
-            for step in range(max_steps):
-                current_agent: RandomAgent = agents[env.current_player_index]
-
-                action: int = current_agent.choose_action(env)
-
-                obs, step_rewards, done, _, info = env.step(action)
-
-                # Record the reward received by the acting agent.
-                agent_name: str = current_agent.name
-                total_rewards[agent_name] += step_rewards[agent_name]
-
-                # Save environment messages to the log.
-                for log in info["log"]:
-                    logfile.write(log)
-                logfile.write(f"Cumulative Rewards: {total_rewards}\n")
-
-                if done:
-                    break
-
-            # Find the remaining non-eliminated player.
-            winner: str | None = next(
-                (player.letter for player in env.players if not player.eliminated),
-                None,
-            )
-
-            # Store final results for the episode.
-            for agent in agents:
-                agent_rewards[agent.name].append(total_rewards[agent.name])
-    
-            steps_per_episode.append(step + 1)
-
-            # print(f"Episode {episode + 1}/{num_episodes}:\nWinner = {winner},\nSteps = {step + 1}")
-
-    env.close()
-
-    return agent_rewards, steps_per_episode
-
-
-def train_agents(
-    env: ChipGameEnv,
-    agent_type: str = "DQN",
-    num_episodes: int = 1000,
-    max_steps: int = 200,
-    batch_size: int = 32,
-    **agent_params,
-) -> tuple[dict[str, list[float]], list[int]]:
-    """Train four game players using a single shared DQN agent."""
-    
-    state_size: int = env.observation_space.shape[0]
-    action_size: int = env.action_space.n
+def get_agent_class(agent_type):
+    """Return the agent class corresponding to its name."""
 
     if agent_type == "DQN":
         AgentClass = DQNAgent
@@ -120,95 +133,379 @@ def train_agents(
     else:
         raise ValueError(f"Unknown agent type: {agent_type}")
 
-    shared_agent = AgentClass(
-        f"shared_{agent_type}",
-        state_size,
-        action_size,
-        **agent_params,
+    return AgentClass
+
+def create_learning_players(env, agent_type, player_names,**agent_params):
+    """
+    Create one shared learning agent and four player wrappers.
+    All players use the same underlying model and replay memory.
+    """
+    
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+
+    AgentClass = get_agent_class(agent_type)
+
+    shared_agent = AgentClass(f"shared_{agent_type}", state_size, action_size, **agent_params)
+    
+    players = [
+        SharedAgentPlayer(name, shared_agent)
+        for name in player_names
+    ]
+
+    return shared_agent, players, state_size
+
+# ============================================================
+# Replay Memory Helpers
+# ============================================================
+
+def prepare_replay_batch(minibatch, state_size):
+    """
+    Convert sampled experiences into TensorFlow tensors.
+    Preserve the original NumPy array construction, reshaping,
+    data types, and transition ordering.
+    """
+
+    states = tf.convert_to_tensor(
+        np.array([t[0] for t in minibatch]).reshape(-1, state_size),
+        dtype=tf.float32,
     )
+
+    actions = tf.convert_to_tensor(
+        np.array([t[1] for t in minibatch]),
+        dtype=tf.int64,
+    )
+
+    rewards = tf.convert_to_tensor(
+        np.array([t[2] for t in minibatch]),
+        dtype=tf.float32,
+    )
+
+    next_states = tf.convert_to_tensor(
+        np.array([t[3] for t in minibatch]).reshape(-1, state_size),
+        dtype=tf.float32,
+    )
+
+    dones = tf.convert_to_tensor(
+        np.array([t[4] for t in minibatch]),
+        dtype=tf.float32,
+    )
+
+    return states, actions, rewards, next_states, dones
+
+def train_replay_batch(shared_agent, batch_size, state_size):
+    """
+    Sample experiences uniformly from replay memory and
+    perform one training update.
+    """
+
+    minibatch = random.sample(
+        shared_agent.memory,
+        batch_size,
+    )
+
+    states, actions, rewards, next_states, dones = (
+        prepare_replay_batch(minibatch, state_size)
+    )
+
+    shared_agent.replay(
+        states,
+        actions,
+        rewards,
+        next_states,
+        dones,
+    )
+
+def update_agent_after_episode(shared_agent, agent_type, episode):
+    """
+    Apply epsilon decay and periodically save weights
+    and synchronize the target network.
+
+    Preserve the original update order and frequency.
+    """
+
+    shared_agent.epsilon = max(
+        shared_agent.epsilon * shared_agent.epsilon_decay,
+        shared_agent.epsilon_min,
+    )
+
+    if episode % 500 == 0:
+        shared_agent.save(f"shared_{agent_type}.weights.h5")
+        shared_agent.update_target_model()
+
+# ============================================================
+# Random Agent Simulation
+# ============================================================
+
+def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int = 500, log_file_name: str = "data/random_game_log.txt"):
+    """Run games using four random agents and record results."""
+
+    # Create the log directory.
+    Path(log_file_name).parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    # Create independent random players.
+    player_names = ["A", "B", "C", "D"]
+
+    agents = [
+        RandomAgent(name)
+        for name in player_names
+    ]
+
+    # Initialize experiment results.
+    agent_rewards = (
+        create_reward_history(player_names)
+    )
+
+    steps_per_episode = []
+
+    # Track training performance.
+    training_start = time.perf_counter()
+    total_steps = 0
+
+    progress_bar = tqdm(
+        range(num_episodes),
+        desc="Random Agent",
+        unit="episode",
+    )
+
+    with open(log_file_name, "w") as logfile:
+        for episode in progress_bar:
+            episode_start = time.perf_counter()
+
+            # Start a new game.
+            obs, _ = env.reset()
+
+            total_rewards = (create_episode_rewards(player_names))
+
+            # Play until termination or the step limit.
+            for step in range(max_steps):
+                current_agent = agents[env.current_player_index]
+
+                action = current_agent.choose_action(env)
+
+                obs, step_rewards, done, _, info = env.step(action)
+
+                # Preserve original random-baseline accounting:
+                # only accumulate the acting agent's reward.
+                agent_name = current_agent.name
+                total_rewards[agent_name] += step_rewards[agent_name]
+
+                # Record environment messages.
+                for log in info["log"]:
+                    logfile.write(log)
+
+                logfile.write(
+                    f"Cumulative Rewards: {total_rewards}\n"
+                )
+
+                if done:
+                    break
+
+            # Identify the remaining non-eliminated player.
+            # Retained even though the result is not currently used.
+            winner: str | None = next(
+                (
+                    player.letter
+                    for player in env.players
+                    if not player.eliminated
+                ),
+                None,
+            )
+
+            # Store cumulative rewards for all random agents.
+            record_episode_rewards(
+                agent_rewards,
+                total_rewards,
+                agents,
+            )
+
+            # Preserve original behavior: record every episode's
+            # length, including episodes that reach max_steps.
+            steps_per_episode.append(step + 1)
+
+            # Original optional output:
+            print(
+                f"Episode {episode + 1}/{num_episodes}:\n"
+                f"Winner = {winner},\n"
+                f"Steps = {step + 1}"
+            )
+
+    env.close()
+
+    return agent_rewards, steps_per_episode
+
+# ============================================================
+# Reinforcement Learning Training
+# ============================================================
+
+def train_agents(
+    env: ChipGameEnv,
+    agent_type: str = "DQN",
+    num_episodes: int = 1000,
+    max_steps: int = 200,
+    batch_size: int = 32,
+    **agent_params,
+) -> tuple[dict[str, list[float]], list[int]]:
+    """
+    Train four game players using a single shared agent.
+
+    The original training procedure is retained for all
+    supported agent types, including replay memory, epsilon
+    decay, and periodic target-network updates.
+    """
+
+    # --------------------------------------------------------
+    # 1. Initialize the shared agent and players
+    # --------------------------------------------------------
 
     player_names: list[str] = ["A", "B", "C", "D"]
 
-    players: list[SharedAgentPlayer] = [SharedAgentPlayer(name, shared_agent) for name in player_names]
+    shared_agent, players, state_size = create_learning_players(
+        env,
+        agent_type,
+        player_names,
+        **agent_params,
+    )
 
-    steps_per_episode: list[int] = []
-    agent_rewards: dict[str, list[float]] = {name: [] for name in player_names}
+    # Initialize experiment results.
+    agent_rewards = (
+        create_reward_history(player_names)
+    )
 
+    steps_per_episode = []
+
+    # Track training performance.
     training_start = time.perf_counter()
     total_steps = 0
 
     progress_bar = tqdm(
         range(num_episodes),
         desc=f"{agent_type} Training",
-        unit="episode"
+        unit="episode",
     )
+
+    # --------------------------------------------------------
+    # 2. Run training episodes
+    # --------------------------------------------------------
 
     for episode in progress_bar:
         episode_start = time.perf_counter()
+
+        # Reset and reshape the initial observation.
         obs, _ = env.reset()
         obs = np.reshape(obs, (1, state_size))
-        total_rewards: dict[str, float] = {name: 0.0 for name in player_names}
-        
+
+        # Reset episode rewards.
+        total_rewards = (create_episode_rewards(player_names))
+
+        # ----------------------------------------------------
+        # 3. Interact with the environment
+        # ----------------------------------------------------
+
         for step in range(max_steps):
             total_steps += 1
 
+            # Identify the current player.
             current_player = players[env.current_player_index]
-            action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state)
+
+            # Select an action using the shared agent.
+            action = current_player.act(
+                tf.convert_to_tensor(obs, dtype=tf.float32),
+                env.state,
+            )
+
+            # Execute the action and observe the transition.
             next_obs, step_rewards, done, _, info = env.step(action)
             next_obs = np.reshape(next_obs, (1, state_size))
 
+            # Preserve the original reward used for learning:
+            # the reward associated with the acting player.
             reward = step_rewards[current_player.name]
-            shared_agent.remember(obs, action, reward, next_obs, done, env.steps_num)
+
+            # Store the experience in shared replay memory.
+            shared_agent.remember(
+                obs,
+                action,
+                reward,
+                next_obs,
+                done,
+                env.steps_num,
+            )
+
+            # Move to the next observation.
             obs = next_obs
 
-            for player in players:
-                total_rewards[player.name] += step_rewards[player.name]
+            # Accumulate each player's reported reward.
+            update_episode_rewards(
+                total_rewards,
+                step_rewards,
+                players,
+            )
 
-            if len(shared_agent.memory) > batch_size and step % 10 == 0:
-                minibatch = random.sample(shared_agent.memory, batch_size)
-                states = tf.convert_to_tensor(np.array([t[0] for t in minibatch]).reshape(-1, state_size), dtype=tf.float32)
-                actions = tf.convert_to_tensor(np.array([t[1] for t in minibatch]), dtype=tf.int64)
-                rewards = tf.convert_to_tensor(np.array([t[2] for t in minibatch]), dtype=tf.float32)
-                next_states = tf.convert_to_tensor(np.array([t[3] for t in minibatch]).reshape(-1, state_size), dtype=tf.float32)
-                dones = tf.convert_to_tensor(np.array([t[4] for t in minibatch]), dtype=tf.float32)
+            # ------------------------------------------------
+            # 4. Train from replay memory
+            # ------------------------------------------------
 
-                shared_agent.replay(states, actions, rewards, next_states, dones)
-            
+            # Preserve the original replay condition:
+            # - Memory must contain more than batch_size samples.
+            # - Training occurs at steps 0, 10, 20, ...
+            if (
+                len(shared_agent.memory) > batch_size
+                and step % 10 == 0
+            ):
+                train_replay_batch(
+                    shared_agent,
+                    batch_size,
+                    state_size,
+                )
+
+            # Preserve the original episode-length behavior:
+            # record lengths only when the game terminates.
             if done:
                 steps_per_episode.append(step + 1)
                 break
-        
-        for player in players:
-            agent_rewards[player.name].append(total_rewards[player.name])
 
-        shared_agent.epsilon = max(shared_agent.epsilon * shared_agent.epsilon_decay, shared_agent.epsilon_min)
+        # ----------------------------------------------------
+        # 5. Complete the episode
+        # ----------------------------------------------------
 
-        if episode % 500 == 0:
-            shared_agent.save(f"shared_{agent_type}.weights.h5")
-            shared_agent.update_target_model()
+        # Save each player's cumulative episode reward.
+        record_episode_rewards(
+            agent_rewards,
+            total_rewards,
+            players,
+        )
 
-        elapsed = time.perf_counter() - training_start
-        episode_time = time.perf_counter() - episode_start
+        # Decay epsilon, save weights, and update target network
+        # according to the original schedule.
+        update_agent_after_episode(
+            shared_agent,
+            agent_type,
+            episode,
+        )
 
-        episodes_per_sec = (episode + 1) / max(elapsed, 1e-9)
-        steps_per_sec = total_steps / max(elapsed, 1e-9)
+        # Update progress-bar statistics.
+        update_training_progress(
+            progress_bar,
+            episode,
+            episode_start,
+            training_start,
+            total_steps,
+        )
 
-        progress_bar.set_postfix({
-            "ep/s": f"{episodes_per_sec:.2f}",
-            "steps/s": f"{steps_per_sec:.1f}",
-            "ep_time": f"{episode_time:.2f}s",
-            "elapsed": f"{elapsed / 60:.1f}m"
-        })
+    # --------------------------------------------------------
+    # 6. Print results and close the environment
+    # --------------------------------------------------------
 
-    total_time = time.perf_counter() - training_start
-
-    print(f"\n{agent_type} Training Summary")
-    print("-" * 60)
-    print(f"Total time: {total_time:.2f} seconds")
-    print(f"Episodes: {num_episodes}")
-    print(f"Total steps: {total_steps}")
-    print(f"Episodes/sec: {num_episodes / max(total_time, 1e-9):.2f}")
-    print(f"Steps/sec: {total_steps / max(total_time, 1e-9):.2f}")
+    print_training_summary(
+        agent_type,
+        num_episodes,
+        total_steps,
+        training_start,
+    )
 
     env.close()
 
