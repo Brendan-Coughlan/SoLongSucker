@@ -237,14 +237,8 @@ def update_agent_after_episode(shared_agent, agent_type, episode):
 # Random Agent Simulation
 # ============================================================
 
-def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int = 500, log_file_name: str = "data/random_game_log.txt"):
+def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int = 500):
     """Run games using four random agents and record results."""
-
-    # Create the log directory.
-    Path(log_file_name).parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
 
     # Create independent random players.
     player_names = ["A", "B", "C", "D"]
@@ -271,67 +265,51 @@ def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int
         unit="episode",
     )
 
-    with open(log_file_name, "w") as logfile:
-        for episode in progress_bar:
-            episode_start = time.perf_counter()
+    for episode in progress_bar:
+        episode_start = time.perf_counter()
 
-            # Start a new game.
-            obs, _ = env.reset()
+        # Start a new game.
+        obs, _ = env.reset()
 
-            total_rewards = (create_episode_rewards(player_names))
+        total_rewards = (create_episode_rewards(player_names))
 
-            # Play until termination or the step limit.
-            for step in range(max_steps):
-                current_agent = agents[env.current_player_index]
+        # Play until termination or the step limit.
+        for step in range(max_steps):
+            current_agent = agents[env.current_player_index]
 
-                action = current_agent.choose_action(env)
+            action = current_agent.choose_action(env)
 
-                obs, step_rewards, done, _, info = env.step(action)
+            obs, step_rewards, done, _, info = env.step(action)
 
-                # Preserve original random-baseline accounting:
-                # only accumulate the acting agent's reward.
-                agent_name = current_agent.name
-                total_rewards[agent_name] += step_rewards[agent_name]
+            # Preserve original random-baseline accounting:
+            # only accumulate the acting agent's reward.
+            agent_name = current_agent.name
+            total_rewards[agent_name] += step_rewards[agent_name]
 
-                # Record environment messages.
-                for log in info["log"]:
-                    logfile.write(log)
+            if done:
+                break
 
-                logfile.write(
-                    f"Cumulative Rewards: {total_rewards}\n"
-                )
+        # Identify the remaining non-eliminated player.
+        # Retained even though the result is not currently used.
+        winner: str | None = next(
+            (
+                player.letter
+                for player in env.players
+                if not player.eliminated
+            ),
+            None,
+        )
 
-                if done:
-                    break
+        # Store cumulative rewards for all random agents.
+        record_episode_rewards(
+            agent_rewards,
+            total_rewards,
+            agents,
+        )
 
-            # Identify the remaining non-eliminated player.
-            # Retained even though the result is not currently used.
-            winner: str | None = next(
-                (
-                    player.letter
-                    for player in env.players
-                    if not player.eliminated
-                ),
-                None,
-            )
-
-            # Store cumulative rewards for all random agents.
-            record_episode_rewards(
-                agent_rewards,
-                total_rewards,
-                agents,
-            )
-
-            # Preserve original behavior: record every episode's
-            # length, including episodes that reach max_steps.
-            steps_per_episode.append(step + 1)
-
-            # Original optional output:
-            print(
-                f"Episode {episode + 1}/{num_episodes}:\n"
-                f"Winner = {winner},\n"
-                f"Steps = {step + 1}"
-            )
+        # Preserve original behavior: record every episode's
+        # length, including episodes that reach max_steps.
+        steps_per_episode.append(step + 1)
 
     env.close()
 

@@ -83,7 +83,7 @@ if __name__ == "__main__":
     BATCH_SIZE: int = 32
 
     # Agents to evaluate
-    AGENT_TYPES = ["DQN"]
+    AGENT_TYPES = ["DuelingDQN", "Random"]
 
     for agent in AGENT_TYPES:
         run_agent_experiment(
