@@ -15,6 +15,11 @@ def print_agent_statistics(title, agent_rewards, steps_per_episode):
     print(f"Reward: {np.mean(episode_rewards):.2f} ± {np.std(episode_rewards):.2f} [{np.min(episode_rewards):.2f}, {np.max(episode_rewards):.2f}]")
     print(f"Steps:  {np.mean(steps):.2f} ± {np.std(steps):.2f} [{np.min(steps):.0f}, {np.max(steps):.0f}]")
 
+    total_rewards = np.sum(list(agent_rewards.values()), axis=0)
+
+    print(f"First 20 episodes: {np.mean(total_rewards[:20]):.2f}")
+    print(f"Last 20 episodes:  {np.mean(total_rewards[-20:]):.2f}")
+
 
 def plot_agent_statistics(
     agent_rewards, steps_per_episode,
@@ -34,7 +39,7 @@ def plot_agent_statistics(
     episodes = np.arange(max_episodes)
 
     # Calculate 20-episode moving averages.
-    window_size: int = 20
+    window_size = min(20, max_episodes)
     smoothed_rewards = np.convolve(episode_rewards, np.ones(window_size) / window_size, mode="valid")
     smoothed_steps = np.convolve(steps, np.ones(window_size) / window_size, mode="valid")
     smoothed_episodes = np.arange(window_size - 1, max_episodes)

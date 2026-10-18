@@ -50,18 +50,16 @@ class ActorCriticAgent(BaseAgent):
             return tf.concat([tf.ones(6), tf.zeros(self.action_size - 6)], axis=0)
         return tf.concat([tf.zeros(6), tf.ones(self.action_size - 6)], axis=0)
 
+
     def act(self, state, env_state):
-        """Sample an action from the masked policy."""
-        policy, _ = self.get_policy_and_value(state)
+        """Sample an action from the phase-masked policy."""
+        policy, _ = self.model(state, training=False)
         mask = self.get_action_mask(env_state)
 
-        masked_policy = policy[0] * mask
-        masked_policy = masked_policy / tf.reduce_sum(masked_policy)
+        # Convert probabilities into stable sampling logits.
+        logits = tf.math.log(tf.clip_by_value(policy[0], 1e-8, 1.0))
+        logits = tf.where(mask > 0, logits, tf.constant(-1e9, dtype=tf.float32))
 
-        action = tf.random.categorical(tf.math.log(masked_policy[None, :]), 1)
-        return tf.cast(action[0, 0], tf.int64)
-
-    @abstractmethod
-    def replay(self, *args, **kwargs):
-        """Perform an algorithm-specific actor-critic update."""
-        pass
+        # Sample only from the allowed actions.
+        action = tf.random.categorical(logits[None, :], 1)
+        return int(action[0, 0])

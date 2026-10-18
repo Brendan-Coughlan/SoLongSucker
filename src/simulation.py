@@ -111,6 +111,12 @@ def update_training_progress(
         "elapsed": f"{elapsed / 60:.1f}m",
     })
 
+def set_random_seed(seed):
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        tf.keras.utils.set_random_seed(seed)
+
 # ============================================================
 # Agent Initialization Helpers
 # ============================================================
@@ -193,6 +199,16 @@ def prepare_replay_batch(minibatch, state_size):
 
     return states, actions, rewards, next_states, dones
 
+def prepare_actor_critic_batch(rollout, state_size):
+    """Convert fresh actor-critic transitions into training tensors."""
+    states = tf.convert_to_tensor(np.array([t[0] for t in rollout]).reshape(-1, state_size), dtype=tf.float32)
+    actions = tf.convert_to_tensor([t[1] for t in rollout], dtype=tf.int64)
+    rewards = tf.convert_to_tensor([t[2] for t in rollout], dtype=tf.float32)
+    next_states = tf.convert_to_tensor(np.array([t[3] for t in rollout]).reshape(-1, state_size), dtype=tf.float32)
+    dones = tf.convert_to_tensor([t[4] for t in rollout], dtype=tf.float32)
+
+    return states, actions, rewards, next_states, dones
+
 def train_replay_batch(shared_agent, batch_size, state_size):
     """
     Sample experiences uniformly from replay memory and
@@ -237,8 +253,10 @@ def update_agent_after_episode(shared_agent, agent_type, episode):
 # Random Agent Simulation
 # ============================================================
 
-def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int = 500):
+def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
     """Run games using four random agents and record results."""
+
+    set_random_seed(seed)
 
     # Create independent random players.
     player_names = ["A", "B", "C", "D"]
@@ -269,7 +287,7 @@ def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int
         episode_start = time.perf_counter()
 
         # Start a new game.
-        obs, _ = env.reset()
+        obs, _ = env.reset(seed=seed + episode if seed is not None else None)
 
         total_rewards = (create_episode_rewards(player_names))
 
@@ -319,14 +337,15 @@ def play_random_games(env: ChipGameEnv, num_episodes: int = 1000, max_steps: int
 # Reinforcement Learning Training
 # ============================================================
 
-def train_agents(
-    env: ChipGameEnv,
-    agent_type: str = "DQN",
-    num_episodes: int = 1000,
-    max_steps: int = 200,
-    batch_size: int = 32,
+def train_value_based_agents(
+    env,
+    agent_type = "DQN",
+    num_episodes = 1000,
+    max_steps = 200,
+    batch_size = 32,
+    seed = None,
     **agent_params,
-) -> tuple[dict[str, list[float]], list[int]]:
+):
     """
     Train four game players using a single shared agent.
 
@@ -334,6 +353,8 @@ def train_agents(
     supported agent types, including replay memory, epsilon
     decay, and periodic target-network updates.
     """
+
+    set_random_seed(seed)
 
     # --------------------------------------------------------
     # 1. Initialize the shared agent and players
@@ -373,7 +394,7 @@ def train_agents(
         episode_start = time.perf_counter()
 
         # Reset and reshape the initial observation.
-        obs, _ = env.reset()
+        obs, _ = env.reset(seed=seed + episode if seed is not None else None)
         obs = np.reshape(obs, (1, state_size))
 
         # Reset episode rewards.
@@ -485,6 +506,82 @@ def train_agents(
         training_start,
     )
 
+    env.close()
+
+    return agent_rewards, steps_per_episode
+
+
+def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_steps = 200, batch_size = 32, seed = None, **agent_params):
+    """Train four players using a shared on-policy actor-critic agent."""
+
+    set_random_seed(seed)
+
+    # Initialize the shared agent and players.
+    player_names = ["A", "B", "C", "D"]
+    shared_agent, players, state_size = create_learning_players(env, agent_type, player_names, **agent_params)
+
+    agent_rewards = create_reward_history(player_names)
+    steps_per_episode = []
+    training_start = time.perf_counter()
+    total_steps = 0
+
+    progress_bar = tqdm(range(num_episodes), desc=f"{agent_type} Training", unit="episode")
+
+    # Run training episodes.
+    for episode in progress_bar:
+        episode_start = time.perf_counter()
+        obs, _ = env.reset(seed=seed + episode if seed is not None else None)
+        obs = np.reshape(obs, (1, state_size))
+        total_rewards = create_episode_rewards(player_names)
+
+        # Store fresh transitions for the current policy.
+        rollout = []
+
+        for step in range(max_steps):
+            total_steps += 1
+            current_player = players[env.current_player_index]
+
+            # Select an action from the actor's policy.
+            action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state)
+
+            # Execute the action.
+            next_obs, step_rewards, done, _, info = env.step(int(action))
+            if episode >= num_episodes - 5:
+                print(f"Step {step}: action={action}, rewards={step_rewards}, done={done}")
+
+            next_obs = np.reshape(next_obs, (1, state_size))
+            reward = step_rewards[current_player.name]
+
+            # Collect an on-policy transition.
+            rollout.append((obs, int(action), reward, next_obs, done))
+            obs = next_obs
+
+            # Accumulate rewards for all players.
+            update_episode_rewards(total_rewards, step_rewards, players)
+
+            # Train on fresh experiences after collecting a rollout.
+            if len(rollout) >= batch_size or done:
+                states, actions, rewards, next_states, dones = prepare_actor_critic_batch(rollout, state_size)
+                shared_agent.replay(states, actions, rewards, next_states, dones)
+                rollout.clear()
+
+            if done:
+                steps_per_episode.append(step + 1)
+                break
+
+        # Train on any remaining transitions.
+        if rollout:
+            states, actions, rewards, next_states, dones = prepare_actor_critic_batch(rollout, state_size)
+            shared_agent.replay(states, actions, rewards, next_states, dones)
+
+        # Record episode results.
+        record_episode_rewards(agent_rewards, total_rewards, players)
+
+        # Update progress-bar statistics.
+        update_training_progress(progress_bar, episode, episode_start, training_start, total_steps)
+
+    # Print results and close the environment.
+    print_training_summary(agent_type, num_episodes, total_steps, training_start)
     env.close()
 
     return agent_rewards, steps_per_episode
