@@ -1,88 +1,72 @@
-from pathlib import Path
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Model
+from actor_critic_agent import ActorCriticAgent
 
-from base_agent import BaseAgent
-from chip_game_env import GameState
 
-class A3CAgent(BaseAgent):
+class A3CAgent(ActorCriticAgent):
     def __init__(self, name, state_size, action_size, **kwargs):
+        kwargs.setdefault("gamma", 0.99)
+        kwargs.setdefault("learning_rate", 0.0007)
+        kwargs.setdefault("entropy_coef", 0.01)
+        kwargs.setdefault("value_coef", 0.5)
         super().__init__(name, state_size, action_size, **kwargs)
-        self.gamma = kwargs.get('gamma', 0.99)
-        self.learning_rate = kwargs.get('learning_rate', 0.001)
-        self.epsilon = kwargs.get('epsilon', 1.0)
-        self.epsilon_decay = kwargs.get('epsilon_decay', 0.995)
-        self.epsilon_min = kwargs.get('epsilon_min', 0.01)
-        self.memory = []
-        self.actor, self.critic = self._build_actor_critic()
-        self.optimizer = Adam(learning_rate=self.learning_rate)
 
-    def _build_actor_critic(self):
-        input_state = Input(shape=(self.state_size,))
-        dense1 = Dense(64, activation='relu')(input_state)
-        dense2 = Dense(64, activation='relu')(dense1)
+    def compute_gradients(self, states, actions, rewards, next_states, dones):
+        with tf.GradientTape() as tape:
+            policy, values = self.model(states, training=True)
+            _, next_values = self.model(next_states, training=False)
 
-        actor_output = Dense(self.action_size, activation='softmax')(dense2)
-        critic_output = Dense(1)(dense2)
+            values = tf.squeeze(values, axis=1)
+            next_values = tf.squeeze(next_values, axis=1)
 
-        actor = Model(inputs=input_state, outputs=actor_output)
-        critic = Model(inputs=input_state, outputs=critic_output)
+            targets = rewards + self.gamma * (1.0 - dones) * tf.stop_gradient(next_values)
+            advantages = tf.stop_gradient(targets - values)
 
-        return actor, critic
+            choose_pile = states[:, -5]
+            pile_mask = tf.concat(
+                [tf.ones(6), tf.zeros(self.action_size - 6)], axis=0
+            )
+            other_mask = tf.concat(
+                [tf.zeros(6), tf.ones(self.action_size - 6)], axis=0
+            )
 
-    def act(self, state, env_state):
-        if np.random.rand() <= self.epsilon:
-            return self.choose_random_action(env_state)
+            masks = (
+                choose_pile[:, None] * pile_mask
+                + (1.0 - choose_pile[:, None]) * other_mask
+            )
 
-        policy = self.actor.predict(state, verbose=0)[0]
-        if env_state == GameState.CHOOSE_PILE:
-            return np.argmax(policy[:6])
-        else:
-            return np.argmax(policy[6:]) + 6
+            masked_policy = policy * masks
+            masked_policy /= tf.reduce_sum(
+                masked_policy, axis=1, keepdims=True
+            )
 
-    def remember(self, state, action, reward, next_state, done, steps):
-        self.memory.append((state, action, reward, next_state, done, steps))
+            indices = tf.stack(
+                [tf.range(tf.shape(actions)[0]), tf.cast(actions, tf.int32)],
+                axis=1
+            )
+
+            action_probs = tf.gather_nd(masked_policy, indices)
+            log_probs = tf.math.log(action_probs + 1e-8)
+
+            actor_loss = -tf.reduce_mean(log_probs * advantages)
+            critic_loss = tf.reduce_mean(tf.square(targets - values))
+
+            entropy = -tf.reduce_sum(
+                masked_policy * tf.math.log(masked_policy + 1e-8),
+                axis=1
+            )
+
+            loss = (
+                actor_loss
+                + self.value_coef * critic_loss
+                - self.entropy_coef * tf.reduce_mean(entropy)
+            )
+
+        return tape.gradient(loss, self.model.trainable_variables)
 
     def replay(self, states, actions, rewards, next_states, dones):
-        with tf.GradientTape() as tape:
-            policy = self.actor(states)
-            values = self.critic(states)
-            next_values = self.critic(next_states)
-
-            advantages = rewards + self.gamma * next_values * (1 - dones) - values
-
-            actor_loss = self._actor_loss(policy, actions, advantages)
-            critic_loss = tf.reduce_mean(tf.square(advantages))
-
-            total_loss = actor_loss + critic_loss
-
-        grads = tape.gradient(total_loss, self.actor.trainable_variables + self.critic.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.actor.trainable_variables + self.critic.trainable_variables))
-
-    def _actor_loss(self, policy, actions, advantages):
-        action_probs = tf.gather(policy, actions, batch_dims=1)
-        log_probs = tf.math.log(action_probs)
-        return -tf.reduce_mean(log_probs * advantages)
-
-    def update_target_model(self):
-        # A3C doesn't use a target model, so this method can be empty
-        pass
-
-    def load(self, name):
-        self.actor.load_weights(f"models/{name}_actor.h5")
-        self.critic.load_weights(f"models/{name}_critic.h5")
-
-    def save(self, name):
-        Path("models").mkdir(parents=True, exist_ok=True)
-
-        self.actor.save_weights(f"models/{name}_actor.h5")
-        self.critic.save_weights(f"models/{name}_critic.h5")
-
-    def choose_random_action(self, env_state):
-        if env_state == GameState.CHOOSE_PILE:
-            return np.random.randint(0, 6)  # Assuming 6 piles
-        else:
-            return np.random.randint(6, self.action_size)
+        gradients = self.compute_gradients(
+            states, actions, rewards, next_states, dones
+        )
+        self.optimizer.apply_gradients(
+            zip(gradients, self.model.trainable_variables)
+        )

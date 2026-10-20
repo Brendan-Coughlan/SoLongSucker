@@ -12,6 +12,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import random
 import time
 from pathlib import Path
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import tensorflow as tf
@@ -546,8 +548,8 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
 
             # Execute the action.
             next_obs, step_rewards, done, _, info = env.step(int(action))
-            if episode >= num_episodes - 5:
-                print(f"Step {step}: action={action}, rewards={step_rewards}, done={done}")
+            # if episode >= num_episodes - 5:
+            #     print(f"Step {step}: action={action}, rewards={step_rewards}, done={done}")
 
             next_obs = np.reshape(next_obs, (1, state_size))
             reward = step_rewards[current_player.name]
@@ -583,5 +585,172 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
     # Print results and close the environment.
     print_training_summary(agent_type, num_episodes, total_steps, training_start)
     env.close()
+
+    return agent_rewards, steps_per_episode
+
+
+def train_a3c_agents(
+    agent_type="A3C",
+    num_episodes=1000,
+    max_steps=200,
+    batch_size=32,
+    num_workers=4,
+    seed=None,
+    **agent_params
+):
+    """Train A3C with independent workers and shared global parameters."""
+    
+    set_random_seed(seed)
+
+    player_names = ["A", "B", "C", "D"]
+
+    sample_env = ChipGameEnv()
+    state_size = sample_env.observation_space.shape[0]
+    action_size = sample_env.action_space.n
+    sample_env.close()
+
+    global_agent = A3CAgent(
+        "global_A3C", state_size, action_size, **agent_params
+    )
+
+    global_agent.optimizer._create_all_weights(
+        global_agent.model.trainable_variables
+    )
+    
+    update_lock = threading.Lock()
+    results_lock = threading.Lock()
+
+    agent_rewards = create_reward_history(player_names)
+    steps_per_episode = [0] * num_episodes
+    episode_rewards = [None] * num_episodes
+
+    training_start = time.perf_counter()
+
+    def worker(worker_id, episode_ids):
+        env = ChipGameEnv()
+
+        local_agent = A3CAgent(
+            f"worker_{worker_id}", state_size, action_size, **agent_params
+        )
+
+        with update_lock:
+            local_agent.model.set_weights(global_agent.model.get_weights())
+
+        players = [
+            SharedAgentPlayer(name, local_agent)
+            for name in player_names
+        ]
+
+        for episode in episode_ids:
+            obs, _ = env.reset(
+                seed=seed + episode if seed is not None else None
+            )
+            obs = np.reshape(obs, (1, state_size))
+
+            total_rewards = create_episode_rewards(player_names)
+            rollout = []
+
+            for step in range(max_steps):
+                current_player = players[env.current_player_index]
+
+                action = int(current_player.act(
+                    tf.convert_to_tensor(obs, dtype=tf.float32),
+                    env.state
+                ))
+
+                next_obs, step_rewards, done, _, info = env.step(action)
+                next_obs = np.reshape(next_obs, (1, state_size))
+
+                reward = step_rewards[current_player.name]
+
+                rollout.append((obs, action, reward, next_obs, done))
+
+                obs = next_obs
+
+                update_episode_rewards(
+                    total_rewards, step_rewards, players
+                )
+
+                if len(rollout) >= batch_size or done:
+                    states, actions, rewards, next_states, dones = (
+                        prepare_actor_critic_batch(rollout, state_size)
+                    )
+
+                    gradients = local_agent.compute_gradients(
+                        states, actions, rewards, next_states, dones
+                    )
+
+                    with update_lock:
+                        global_agent.optimizer.apply_gradients(
+                            zip(
+                                gradients,
+                                global_agent.model.trainable_variables
+                            )
+                        )
+                        local_agent.model.set_weights(
+                            global_agent.model.get_weights()
+                        )
+
+                    rollout.clear()
+
+                if done:
+                    break
+
+            if rollout:
+                states, actions, rewards, next_states, dones = (
+                    prepare_actor_critic_batch(rollout, state_size)
+                )
+
+                gradients = local_agent.compute_gradients(
+                    states, actions, rewards, next_states, dones
+                )
+
+                with update_lock:
+                    global_agent.optimizer.apply_gradients(
+                        zip(
+                            gradients,
+                            global_agent.model.trainable_variables
+                        )
+                    )
+                    local_agent.model.set_weights(
+                        global_agent.model.get_weights()
+                    )
+
+            with results_lock:
+                episode_rewards[episode] = total_rewards
+                steps_per_episode[episode] = step + 1
+
+        env.close()
+
+    episode_groups = [
+        list(range(worker_id, num_episodes, num_workers))
+        for worker_id in range(num_workers)
+    ]
+
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = [
+            executor.submit(worker, worker_id, episode_ids)
+            for worker_id, episode_ids in enumerate(episode_groups)
+            if episode_ids
+        ]
+
+        for future in tqdm(
+            as_completed(futures),
+            total=len(futures),
+            desc="A3C Workers",
+            unit="worker"
+        ):
+            future.result()
+
+    for rewards in episode_rewards:
+        for name in player_names:
+            agent_rewards[name].append(rewards[name])
+
+    print_training_summary(
+        agent_type,
+        num_episodes,
+        sum(steps_per_episode),
+        training_start
+    )
 
     return agent_rewards, steps_per_episode

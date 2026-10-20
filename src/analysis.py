@@ -77,3 +77,86 @@ def plot_agent_statistics(
 
     if render_plots:
         plt.show()
+
+    plt.close()
+
+def plot_algorithm_comparison(
+    all_results,
+    plot_file_name="data/algorithm_comparison.png",
+    window_size=100,
+    render_plots=True
+):
+    """Compare smoothed episode rewards across algorithms and trials."""
+
+    import os
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    for agent_type, trials in all_results.items():
+        if not trials:
+            continue
+
+        trial_rewards = []
+
+        for trial in trials:
+            rewards = np.array(
+                list(trial["agent_rewards"].values()),
+                dtype=float
+            )
+            trial_rewards.append(rewards.sum(axis=0))
+
+        min_episodes = min(len(rewards) for rewards in trial_rewards)
+        if min_episodes == 0:
+            continue
+
+        rewards = np.array([
+            trial[:min_episodes] for trial in trial_rewards
+        ])
+
+        window = min(window_size, min_episodes)
+        kernel = np.ones(window) / window
+
+        smoothed = np.array([
+            np.convolve(trial, kernel, mode="valid")
+            for trial in rewards
+        ])
+
+        mean_rewards = smoothed.mean(axis=0)
+        std_rewards = smoothed.std(axis=0)
+
+        episodes = np.arange(window, min_episodes + 1)
+
+        line, = ax.plot(
+            episodes,
+            mean_rewards,
+            linewidth=2,
+            label=agent_type
+        )
+
+        if len(trials) > 1:
+            ax.fill_between(
+                episodes,
+                mean_rewards - std_rewards,
+                mean_rewards + std_rewards,
+                color=line.get_color(),
+                alpha=0.15
+            )
+
+    ax.set_title("Reinforcement Learning Algorithm Comparison")
+    ax.set_xlabel("Training Episode")
+    ax.set_ylabel("Mean Total Reward")
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    plt.tight_layout()
+
+    os.makedirs(os.path.dirname(plot_file_name) or ".", exist_ok=True)
+    plt.savefig(plot_file_name, dpi=300, bbox_inches="tight")
+
+    if render_plots:
+        plt.show()
+    else:
+        plt.close(fig)

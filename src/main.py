@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 
 from chip_game_env import ChipGameEnv
-from simulation import play_random_games, train_value_based_agents, train_actor_critic_agents
-from analysis import print_agent_statistics, plot_agent_statistics
+from simulation import play_random_games, train_a3c_agents, train_value_based_agents, train_actor_critic_agents
+from analysis import print_agent_statistics, plot_agent_statistics, plot_algorithm_comparison
 
 
 # ============================================================
@@ -26,6 +26,16 @@ def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = 
         agent_rewards, steps_per_episode = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
     elif agent_type in ["A2C"]:
         agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
+    elif agent_type in ["A3C"]:
+        env.close()
+        agent_rewards, steps_per_episode = train_a3c_agents(
+            agent_type=agent_type,
+            num_episodes=num_episodes,
+            max_steps=max_steps,
+            batch_size=batch_size,
+            num_workers=4,
+            seed=seed
+        )
 
     return agent_rewards, steps_per_episode
 
@@ -150,13 +160,13 @@ def run_multiple_trials(
 # Main Experiment Configuration
 # ============================================================
 if __name__ == "__main__":
-    NUM_TRIALS = 5
+    NUM_TRIALS = 10
     NUM_EPISODES = 10000
     MAX_STEPS = 200
     BATCH_SIZE = 32
     SEED = 42
 
-    AGENT_TYPES = ["DQN"]
+    AGENT_TYPES = ["Random"]
 
     all_results = {}
 
@@ -167,9 +177,15 @@ if __name__ == "__main__":
             num_episodes=NUM_EPISODES,
             max_steps=MAX_STEPS,
             batch_size=BATCH_SIZE,
-            use_gpu=False,
+            base_seed=SEED,
             plot=True,
             render_plots=False,
-            print_stats=True,
-            base_seed=SEED
+            print_stats=True
         )
+
+    # plot_algorithm_comparison(
+    #     all_results,
+    #     plot_file_name="data/algorithm_comparison.png",
+    #     window_size=100,
+    #     render_plots=False
+    # )
