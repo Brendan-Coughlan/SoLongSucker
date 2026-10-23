@@ -92,6 +92,15 @@ def plot_algorithm_comparison(
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
+    ALGORITHM_COLORS = {
+        "Random": "#E69F00",
+        "DQN": "#56B4E9",
+        "DDQN": "#009E73",
+        "DuelingDQN": "#0072B2",
+        "A2C": "#CC79A7",
+    }
+
+    
     for agent_type, trials in all_results.items():
         if not trials:
             continue
@@ -126,11 +135,14 @@ def plot_algorithm_comparison(
 
         episodes = np.arange(window, min_episodes + 1)
 
+        color = ALGORITHM_COLORS.get(agent_type) if ALGORITHM_COLORS else None
+
         line, = ax.plot(
             episodes,
             mean_rewards,
             linewidth=2,
-            label=agent_type
+            label=agent_type,
+            color=color
         )
 
         if len(trials) > 1:
@@ -138,10 +150,11 @@ def plot_algorithm_comparison(
                 episodes,
                 mean_rewards - std_rewards,
                 mean_rewards + std_rewards,
-                color=line.get_color(),
+                color=color,
                 alpha=0.15
             )
 
+    ax.set_ylim(bottom=-100)
     ax.set_title("Reinforcement Learning Algorithm Comparison")
     ax.set_xlabel("Training Episode")
     ax.set_ylabel("Mean Total Reward")
@@ -160,3 +173,72 @@ def plot_algorithm_comparison(
         plt.show()
     else:
         plt.close(fig)
+
+def print_algorithm_comparison_statistics(all_results):
+    """Print performance statistics across independent trials."""
+
+    print("\n" + "=" * 95)
+    print("ALGORITHM COMPARISON STATISTICS")
+    print("=" * 95)
+
+    print(
+        f"{'Algorithm':<15}"
+        f"{'Trials':>8}"
+        f"{'Mean Reward':>22}"
+        f"{'Mean Steps':>22}"
+        f"{'First 20':>14}"
+        f"{'Last 20':>14}"
+    )
+    print("-" * 95)
+
+    for agent_type, trials in all_results.items():
+        if not trials:
+            continue
+
+        trial_mean_rewards = []
+        trial_mean_steps = []
+        trial_first20 = []
+        trial_last20 = []
+
+        for trial in trials:
+            rewards = np.array(
+                list(trial["agent_rewards"].values()),
+                dtype=float
+            )
+
+            total_rewards = rewards.sum(axis=0)
+            steps = np.asarray(trial["steps_per_episode"], dtype=float)
+
+            if len(total_rewards) == 0:
+                continue
+
+            trial_mean_rewards.append(np.mean(total_rewards))
+
+            if len(steps) > 0:
+                trial_mean_steps.append(np.mean(steps))
+
+            trial_first20.append(np.mean(total_rewards[:20]))
+            trial_last20.append(np.mean(total_rewards[-20:]))
+
+        if not trial_mean_rewards:
+            continue
+
+        def format_stats(values):
+            if not values:
+                return "N/A"
+
+            values = np.asarray(values, dtype=float)
+
+            return f"{np.mean(values):.2f} ± {np.std(values):.2f}"
+
+        print(
+            f"{agent_type:<15}"
+            f"{len(trial_mean_rewards):>8}"
+            f"{format_stats(trial_mean_rewards):>22}"
+            f"{format_stats(trial_mean_steps):>22}"
+            f"{np.mean(trial_first20):>14.2f}"
+            f"{np.mean(trial_last20):>14.2f}"
+        )
+
+    print("=" * 95)
+    print("± indicates standard deviation across independent trial means.")

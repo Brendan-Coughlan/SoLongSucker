@@ -20,7 +20,7 @@ class A2CAgent(ActorCriticAgent):
 
         super().__init__(name, state_size, action_size, **kwargs)
 
-    @tf.function
+    @tf.function(reduce_retracing=True)
     def replay(self, states, actions, rewards, next_states, dones):
         """Train the actor and critic using one-step TD advantages."""
 
