@@ -241,43 +241,52 @@ def run_multiple_trials(
 #         # # Save immediately after this algorithm finishes.
 #         # save_agent_results(agent, results)
 
+# if __name__ == "__main__":
+#     NUM_TRIALS = 1
+#     NUM_EPISODES = 10000
+#     MAX_STEPS = 200
+#     BATCH_SIZE = 32
+#     SEED = 49
+#     AGENT_TYPES = ["A2C"]
+
+#     all_results = {}
+
+#     for agent in AGENT_TYPES:
+
+#         # Load existing results.
+#         saved_results = load_agent_results(agent)
+#         all_results[agent] = saved_results if saved_results is not None else []
+
+#         # Continue with new seeds to avoid repeating trials.
+#         existing_seeds = [
+#             result["seed"]
+#             for result in all_results[agent]
+#             if result.get("seed") is not None
+#         ]
+
+#         next_seed = max(max(existing_seeds, default=SEED - 1) + 1, SEED)
+
+#         # Run additional trials.
+#         results = run_multiple_trials(
+#             agent_type=agent,
+#             num_trials=NUM_TRIALS,
+#             num_episodes=NUM_EPISODES,
+#             max_steps=MAX_STEPS,
+#             batch_size=BATCH_SIZE,
+#             base_seed=next_seed,
+#             plot=True,
+#             render_plots=False,
+#             print_stats=True
+#         )
+
+#         # Append new results and save.
+#         all_results = add_agent_results(all_results, agent, results)
+
 if __name__ == "__main__":
-    NUM_TRIALS = 1
-    NUM_EPISODES = 10000
-    MAX_STEPS = 200
-    BATCH_SIZE = 32
-    SEED = 49
-    AGENT_TYPES = ["A2C"]
+    print("Welcome to So Long Sucker Reinforcement Learning Environment!\n")
 
-    all_results = {}
-
-    for agent in AGENT_TYPES:
-
-        # Load existing results.
-        saved_results = load_agent_results(agent)
-        all_results[agent] = saved_results if saved_results is not None else []
-
-        # Continue with new seeds to avoid repeating trials.
-        existing_seeds = [
-            result["seed"]
-            for result in all_results[agent]
-            if result.get("seed") is not None
-        ]
-
-        next_seed = max(max(existing_seeds, default=SEED - 1) + 1, SEED)
-
-        # Run additional trials.
-        results = run_multiple_trials(
-            agent_type=agent,
-            num_trials=NUM_TRIALS,
-            num_episodes=NUM_EPISODES,
-            max_steps=MAX_STEPS,
-            batch_size=BATCH_SIZE,
-            base_seed=next_seed,
-            plot=True,
-            render_plots=False,
-            print_stats=True
-        )
-
-        # Append new results and save.
-        all_results = add_agent_results(all_results, agent, results)
+    agents = input("What agents should be trained? (Default: Random) ")
+    num_of_trials = input("How many trials? (Default: 1) ")
+    num_of_episodes = input("How many episodes? (Default: 1000) ")
+    max_num_of_steps = input("What is the max number of steps? (Default: 200) ")
+    is_plotted = input("Should results be plotted? (Y/N) (Default: N) ")
