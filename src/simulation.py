@@ -354,7 +354,7 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             # Preserve original random-baseline accounting:
             # only accumulate the acting agent's reward.
             agent_name = current_agent.name
-            total_rewards[agent_name] += step_rewards[agent_name]
+            update_episode_rewards(total_rewards, step_rewards, agents)
 
             if done:
                 break
@@ -516,8 +516,9 @@ def train_value_based_agents(
             # Preserve the original episode-length behavior:
             # record lengths only when the game terminates.
             if done:
-                steps_per_episode.append(step + 1)
                 break
+
+            steps_per_episode.append(step + 1)
 
         # ----------------------------------------------------
         # 5. Complete the episode
@@ -618,8 +619,9 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
                 rollout.clear()
 
             if done:
-                steps_per_episode.append(step + 1)
                 break
+
+            steps_per_episode.append(step + 1)
 
         # Train on any remaining transitions.
         if rollout:
