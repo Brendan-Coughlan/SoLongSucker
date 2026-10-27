@@ -5,6 +5,7 @@ from simulation import (
     add_agent_results,
     run_multiple_trials,
 )
+from analysis import plot_algorithm_comparison
 
 # ============================================================
 # Main Experiment Configuration
@@ -122,9 +123,10 @@ def main():
     # --------------------------------------------------------
 
     all_results = {}
-    next_seed = base_seed
 
     for agent in agent_types:
+        next_seed = base_seed
+
         print(f"\n{'=' * 60}")
         print(f"Processing {agent}")
         print(f"{'=' * 60}\n")
@@ -132,10 +134,10 @@ def main():
         if truncate_results:
             # Reset saved results for the current agent
             all_results[agent] = []
-
             print(f"Resetting saved results for {agent}")
 
-            save_agent_results(agent, all_results[agent])
+            if num_trials == 0:
+                save_agent_results(agent, [])
         else:
             # Load existing results if available
             saved_results = load_agent_results(agent)
@@ -171,7 +173,33 @@ def main():
 
             all_results = add_agent_results(all_results=all_results, agent_type=agent, results=results)
             print(f"Completed {num_trials} new trials for {agent}")
-        
+
+    # --------------------------------------------------------
+    # Algorithm Comparison
+    # --------------------------------------------------------
+
+    if compare:
+        for agent in available_agents:
+            if agent not in all_results:
+                saved_results = load_agent_results(agent)
+                if saved_results:
+                    all_results[agent] = saved_results
+
+        comparison_results = {
+            agent: trials
+            for agent, trials in all_results.items()
+            if trials
+        }
+
+        if comparison_results:
+            os.makedirs("data/figures", exist_ok=True)
+
+            plot_algorithm_comparison(
+                comparison_results,
+                plot_file_name="data/figures/algorithm_comparison.png"
+                )
+        else:
+            print("No saved results available for comparison.")
 
     print("\nAll operations completed successfully!")
 

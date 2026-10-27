@@ -23,9 +23,8 @@ def print_agent_statistics(title, agent_rewards, steps_per_episode):
 
 def plot_agent_statistics(
     agent_rewards, steps_per_episode,
-    num_episodes, experiment_name, plot_file_name,
-    render_plots=True
-):
+    num_episodes, experiment_name, plot_file_name
+    ):
     """Plot total rewards and steps per episode."""
 
     # Prepare episode data.
@@ -74,18 +73,13 @@ def plot_agent_statistics(
 
     plt.tight_layout()
     plt.savefig(plot_file_name, dpi=300, bbox_inches="tight")
-
-    if render_plots:
-        plt.show()
-
     plt.close()
 
 def plot_algorithm_comparison(
     all_results,
-    plot_file_name="data/algorithm_comparison.png",
-    window_size=100,
-    render_plots=True
-):
+    plot_file_name="data/figures/algorithm_comparison.png",
+    window_size=100
+    ):
     """Compare smoothed episode rewards across algorithms and trials."""
 
     import os
@@ -168,11 +162,6 @@ def plot_algorithm_comparison(
 
     os.makedirs(os.path.dirname(plot_file_name) or ".", exist_ok=True)
     plt.savefig(plot_file_name, dpi=300, bbox_inches="tight")
-
-    if render_plots:
-        plt.show()
-    else:
-        plt.close(fig)
 
 def print_algorithm_comparison_statistics(all_results):
     """Print performance statistics across independent trials."""
