@@ -9,9 +9,9 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # Imports
 # ============================================================
 
+import pickle
 import random
 import time
-from pathlib import Path
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
+from analysis import print_agent_statistics, plot_agent_statistics
 
 # Value-based agents
 from dqn_agent import DQNAgent
@@ -50,27 +51,15 @@ class SharedAgentPlayer:
         """Delegate action selection to the shared agent."""
         return self.shared_agent.act(state, env_state)
 
+
 # ============================================================
-# Shared Helper Functions
+# Experiment Helper Functions
 # ============================================================
 
-def create_reward_history(player_names):
-    """Initialize reward histories for all players."""
-    return {name: [] for name in player_names}
-
-def create_episode_rewards(player_names):
-    """Initialize cumulative rewards for a single episode."""
-    return {name: 0.0 for name in player_names}
-
-def record_episode_rewards(agent_rewards, total_rewards, players):
-    """Append each player's episode reward to its history."""
-    for player in players:
-        agent_rewards[player.name].append(total_rewards[player.name])
-
-def update_episode_rewards(total_rewards, step_rewards, players):
-    """Accumulate the step rewards of all learning players."""
-    for player in players:
-        total_rewards[player.name] += step_rewards[player.name]
+def configure_gpu(use_gpu):
+    """Disable GPU visibility when requested."""
+    if not use_gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 def print_training_summary(agent_type, num_episodes, total_steps, training_start):
     """Display overall training performance statistics."""
@@ -114,10 +103,71 @@ def update_training_progress(
     })
 
 def set_random_seed(seed):
+    """Set the random seed for reproducibility."""
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
         tf.keras.utils.set_random_seed(seed)
+
+def save_agent_results(agent_type, results, directory="data/results"):
+    """Save an agent's trial results to disk."""
+    os.makedirs(directory, exist_ok=True)
+    
+    file_path = os.path.join(directory, f"{agent_type}_results.pkl")
+
+    with open(file_path, "wb") as f:
+        pickle.dump(results, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_agent_results(agent_type, directory="data/results"):
+    """Load previously saved trial results, if available."""
+    file_path = os.path.join(directory, f"{agent_type}_results.pkl")
+
+    if not os.path.exists(file_path):
+        return None
+
+    with open(file_path, "rb") as f:
+        results = pickle.load(f)
+
+    return results
+
+def add_agent_results(all_results, agent_type, results):
+    """Append completed trial results and save them."""
+    if agent_type not in all_results:
+        all_results[agent_type] = []
+
+    start_trial = len(all_results[agent_type])
+
+    for i, result in enumerate(results):
+        result["trial"] = start_trial + i + 1
+
+    all_results[agent_type].extend(results)
+
+    save_agent_results(agent_type, all_results[agent_type])
+
+    return all_results
+
+# ============================================================
+# Shared Helper Functions
+# ============================================================
+
+def create_reward_history(player_names):
+    """Initialize reward histories for all players."""
+    return {name: [] for name in player_names}
+
+def create_episode_rewards(player_names):
+    """Initialize cumulative rewards for a single episode."""
+    return {name: 0.0 for name in player_names}
+
+def record_episode_rewards(agent_rewards, total_rewards, players):
+    """Append each player's episode reward to its history."""
+    for player in players:
+        agent_rewards[player.name].append(total_rewards[player.name])
+
+def update_episode_rewards(total_rewards, step_rewards, players):
+    """Accumulate the step rewards of all learning players."""
+    for player in players:
+        total_rewards[player.name] += step_rewards[player.name]
 
 # ============================================================
 # Agent Initialization Helpers
@@ -754,3 +804,115 @@ def train_a3c_agents(
     )
 
     return agent_rewards, steps_per_episode
+
+# ============================================================
+# Main Simulation Functions
+# ============================================================
+
+def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = None, **agent_params):
+    """Run random games or train the selected agent."""
+    if agent_type == "Random":
+        agent_rewards, steps_per_episode = play_random_games(env, num_episodes, max_steps, seed=seed)
+    elif agent_type in ["DQN", "DDQN", "DuelingDQN"]:
+        agent_rewards, steps_per_episode = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
+    elif agent_type in ["A2C"]:
+        agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
+    elif agent_type in ["A3C"]:
+        env.close()
+        agent_rewards, steps_per_episode = train_a3c_agents(
+            agent_type=agent_type,
+            num_episodes=num_episodes,
+            max_steps=max_steps,
+            batch_size=batch_size,
+            num_workers=4,
+            seed=seed
+        )
+    else:
+        raise ValueError(f"Unsupported agent type: {agent_type}")
+
+    return agent_rewards, steps_per_episode
+
+
+def run_agent_experiment(
+    agent_type, num_episodes, max_steps: int, batch_size: int,
+    plot = True, print_stats = True, use_gpu = False, seed = None
+):
+    """Configure, run, and report results for one agent experiment."""
+
+    # Configure hardware and initialize environment.
+    configure_gpu(use_gpu)
+    env: ChipGameEnv = ChipGameEnv()
+
+    # Run the experiment.
+    agent_rewards, steps_per_episode = run_simulation(
+        env=env, agent_type=agent_type, num_episodes=num_episodes,
+        max_steps=max_steps, batch_size=batch_size, seed=seed
+    )
+
+    return agent_rewards, steps_per_episode
+
+def run_multiple_trials(
+    agent_type, num_trials, num_episodes, max_steps, batch_size,
+    plot=True, print_trial_stats=False, print_overall_stats=True,
+    use_gpu=False, base_seed=42
+):
+    """Run independent trials with fresh agents and environments."""
+    results = []
+
+    for trial in range(num_trials):
+        seed = base_seed + trial
+        set_random_seed(seed)
+
+        tf.keras.backend.clear_session()
+
+        if print_trial_stats:
+            print(f"\n{'=' * 60}")
+            print(f"{agent_type} - Trial {trial + 1}/{num_trials}")
+            print(f"Seed: {seed}")
+            print(f"{'=' * 60}")
+
+        agent_rewards, steps_per_episode = run_agent_experiment(
+            agent_type=agent_type,
+            num_episodes=num_episodes,
+            max_steps=max_steps,
+            batch_size=batch_size,
+            plot=plot,
+            use_gpu=use_gpu,
+            seed=seed
+        )
+
+        total_rewards = np.sum(list(agent_rewards.values()), axis=0)
+
+        if print_trial_stats:
+            print_agent_statistics(f"{agent_type} - Trial {trial + 1}", agent_rewards, steps_per_episode)
+
+        if plot:
+            figure_dir = "data/figures"
+            os.makedirs(figure_dir, exist_ok=True)
+
+            plot_agent_statistics(
+                agent_rewards, steps_per_episode, num_episodes,
+                agent_type,
+                f"{figure_dir}/{agent_type}_seed_{seed}_performance.png"            )
+
+        results.append({
+            "trial": trial + 1,
+            "seed": seed,
+            "agent_rewards": agent_rewards,
+            "steps_per_episode": steps_per_episode,
+            "mean_reward": np.mean(total_rewards),
+            "mean_steps": np.mean(steps_per_episode) if steps_per_episode else np.nan
+        })
+
+    if print_overall_stats:
+        print(f"\n{'=' * 60}")
+        print(f"{agent_type} - Summary Across {num_trials} Trials")
+        print(f"{'=' * 60}")
+
+        rewards = np.array([result["mean_reward"] for result in results])
+        steps = np.array([result["mean_steps"] for result in results])
+
+        print(f"Reward: {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
+        print(f"Steps:  {np.nanmean(steps):.2f} ± {np.nanstd(steps):.2f}")
+
+    return results
