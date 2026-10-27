@@ -5,7 +5,7 @@ from simulation import (
     add_agent_results,
     run_multiple_trials,
 )
-from analysis import plot_algorithm_comparison
+from analysis import plot_algorithm_comparison, print_algorithm_comparison_statistics
 
 # ============================================================
 # Main Experiment Configuration
@@ -198,6 +198,8 @@ def main():
                 comparison_results,
                 plot_file_name="data/figures/algorithm_comparison.png"
                 )
+
+            print_algorithm_comparison_statistics(comparison_results)
         else:
             print("No saved results available for comparison.")
 
