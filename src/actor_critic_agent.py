@@ -50,11 +50,14 @@ class ActorCriticAgent(BaseAgent):
             return tf.concat([tf.ones(6), tf.zeros(self.action_size - 6)], axis=0)
         return tf.concat([tf.zeros(6), tf.ones(self.action_size - 6)], axis=0)
 
-
-    def act(self, state, env_state):
+    def act(self, state, env_state, action_mask=None):
         """Sample an action from the phase-masked policy."""
         policy, _ = self.model(state, training=False)
-        mask = self.get_action_mask(env_state)
+
+        if self.use_action_masking and action_mask is not None:
+            mask = tf.convert_to_tensor(action_mask, dtype=tf.float32)
+        else:
+            mask = self.get_action_mask(env_state)
 
         # Convert probabilities into stable sampling logits.
         logits = tf.math.log(tf.clip_by_value(policy[0], 1e-8, 1.0))

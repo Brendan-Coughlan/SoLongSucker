@@ -49,13 +49,28 @@ class ValueBasedAgent(BaseAgent):
         self.memory.append((state, action, reward, next_state, done, steps))
 
     @tf.function
-    def act(self, state, env_state):
+    def act(self, state, env_state, action_mask=None):
         """Select an action using epsilon-greedy exploration."""
+        if self.use_action_masking and action_mask is not None:
+            valid_actions = tf.cast(tf.where(action_mask > 0)[:, 0], tf.int64)
+
+            if int(tf.size(valid_actions)) == 0:
+                raise ValueError("No valid actions available.")
+
+            if tf.random.uniform(()) <= self.epsilon:
+                index = tf.random.uniform((), maxval=tf.size(valid_actions), dtype=tf.int32)
+                return valid_actions[index]
+
+            q_values = self.model(state, training=False)[0]
+            mask = tf.cast(action_mask, tf.bool)
+            masked_q_values = tf.where(mask, q_values, tf.constant(-1e9, dtype=tf.float32))
+
+            return tf.argmax(masked_q_values, output_type=tf.int64)
+
         if tf.random.uniform(()) <= self.epsilon:
             return self.choose_random_action(env_state)
-        else:
-            act_values = self.model(state)
-            return self.choose_best_action(act_values, env_state)
+
+        return self.choose_best_action(self.model(state), env_state)
 
     def choose_random_action(self, env_state):
         """Select a random action for the current game phase."""

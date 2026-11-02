@@ -47,9 +47,9 @@ class SharedAgentPlayer:
         self.name = name
         self.shared_agent = shared_agent
 
-    def act(self, state: tf.Tensor, env_state):
+    def act(self, state, env_state, action_mask=None):
         """Delegate action selection to the shared agent."""
-        return self.shared_agent.act(state, env_state)
+        return self.shared_agent.act(state, env_state, action_mask)
 
 
 # ============================================================
@@ -193,7 +193,7 @@ def get_agent_class(agent_type):
 
     return AgentClass
 
-def create_learning_players(env, agent_type, player_names,**agent_params):
+def create_learning_players(env, agent_type, player_names, use_action_masking=False, **agent_params):
     """
     Create one shared learning agent and four player wrappers.
     All players use the same underlying model and replay memory.
@@ -204,7 +204,7 @@ def create_learning_players(env, agent_type, player_names,**agent_params):
 
     AgentClass = get_agent_class(agent_type)
 
-    shared_agent = AgentClass(f"shared_{agent_type}", state_size, action_size, **agent_params)
+    shared_agent = AgentClass(f"shared_{agent_type}", state_size, action_size, use_action_masking=use_action_masking, **agent_params)
     
     players = [
         SharedAgentPlayer(name, shared_agent)
@@ -351,9 +351,6 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
 
             obs, step_rewards, done, _, info = env.step(action)
 
-            # Preserve original random-baseline accounting:
-            # only accumulate the acting agent's reward.
-            agent_name = current_agent.name
             update_episode_rewards(total_rewards, step_rewards, agents)
 
             if done:
@@ -396,6 +393,7 @@ def train_value_based_agents(
     max_steps = 200,
     batch_size = 32,
     seed = None,
+    use_action_masking = False,
     **agent_params,
 ):
     """
@@ -418,6 +416,7 @@ def train_value_based_agents(
         env,
         agent_type,
         player_names,
+        use_action_masking=use_action_masking,
         **agent_params,
     )
 
@@ -462,10 +461,24 @@ def train_value_based_agents(
             # Identify the current player.
             current_player = players[env.current_player_index]
 
+            action_mask = env.get_action_mask() if use_action_masking else None
+
+            if use_action_masking and not np.any(action_mask):
+                print("State:", env.state)
+                print("Player:", env._current_player().letter)
+                print("Chips:", env._current_player().chips)
+                print("Eligible players:", [p.letter for p in env.eligible_next_players])
+                print("Last played pile:", env.last_played_pile)
+                print("Piles:", env.piles)
+                print("Done:", env.done)
+                print("Mask:", action_mask)
+                raise ValueError("Environment returned an empty action mask.")
+
             # Select an action using the shared agent.
             action = current_player.act(
                 tf.convert_to_tensor(obs, dtype=tf.float32),
                 env.state,
+                action_mask=action_mask
             )
 
             # Execute the action and observe the transition.
@@ -564,14 +577,13 @@ def train_value_based_agents(
     return agent_rewards, steps_per_episode
 
 
-def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_steps = 200, batch_size = 32, seed = None, **agent_params):
+def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_steps = 200, batch_size = 32, seed = None, use_action_masking = False, **agent_params):
     """Train four players using a shared on-policy actor-critic agent."""
-
     set_random_seed(seed)
 
     # Initialize the shared agent and players.
     player_names = ["A", "B", "C", "D"]
-    shared_agent, players, state_size = create_learning_players(env, agent_type, player_names, **agent_params)
+    shared_agent, players, state_size = create_learning_players(env, agent_type, player_names, use_action_masking=use_action_masking, **agent_params)
 
     agent_rewards = create_reward_history(player_names)
     steps_per_episode = []
@@ -595,7 +607,7 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
             current_player = players[env.current_player_index]
 
             # Select an action from the actor's policy.
-            action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state)
+            action = current_player.act(tf.convert_to_tensor(obs, dtype=tf.float32), env.state, action_mask=env.get_action_mask() if use_action_masking else None)
 
             # Execute the action.
             next_obs, step_rewards, done, _, info = env.step(int(action))
@@ -811,14 +823,14 @@ def train_a3c_agents(
 # Main Simulation Functions
 # ============================================================
 
-def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = None, **agent_params):
+def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = None, use_action_masking = False, **agent_params):
     """Run random games or train the selected agent."""
     if agent_type == "Random":
         agent_rewards, steps_per_episode = play_random_games(env, num_episodes, max_steps, seed=seed)
     elif agent_type in ["DQN", "DDQN", "DuelingDQN"]:
-        agent_rewards, steps_per_episode = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
+        agent_rewards, steps_per_episode = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, use_action_masking=use_action_masking, **agent_params)
     elif agent_type in ["A2C"]:
-        agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, **agent_params)
+        agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, use_action_masking=use_action_masking, **agent_params)
     elif agent_type in ["A3C"]:
         env.close()
         agent_rewards, steps_per_episode = train_a3c_agents(
@@ -837,7 +849,7 @@ def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = 
 
 def run_agent_experiment(
     agent_type, num_episodes, max_steps: int, batch_size: int,
-    plot = True, print_stats = True, use_gpu = False, seed = None
+    plot = True, print_stats = True, use_gpu = False, seed = None, use_action_masking = False
 ):
     """Configure, run, and report results for one agent experiment."""
 
@@ -848,7 +860,7 @@ def run_agent_experiment(
     # Run the experiment.
     agent_rewards, steps_per_episode = run_simulation(
         env=env, agent_type=agent_type, num_episodes=num_episodes,
-        max_steps=max_steps, batch_size=batch_size, seed=seed
+        max_steps=max_steps, batch_size=batch_size, seed=seed, use_action_masking=use_action_masking
     )
 
     return agent_rewards, steps_per_episode
@@ -856,7 +868,7 @@ def run_agent_experiment(
 def run_multiple_trials(
     agent_type, num_trials, num_episodes, max_steps, batch_size,
     plot=True, print_trial_stats=False, print_overall_stats=True,
-    use_gpu=False, base_seed=42
+    use_gpu=False, base_seed=42, use_action_masking=False,
 ):
     """Run independent trials with fresh agents and environments."""
     results = []
@@ -880,6 +892,7 @@ def run_multiple_trials(
             batch_size=batch_size,
             plot=plot,
             use_gpu=use_gpu,
+            use_action_masking=use_action_masking,
             seed=seed
         )
 

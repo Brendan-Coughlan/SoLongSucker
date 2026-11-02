@@ -13,7 +13,6 @@ class GameState(Enum):
     ELIMINATE_CHIP = auto()
 
 class Player:
-
     def __init__(self, letter: str, max_chips: int, player_letters: list[str]):
         self.letter = letter
         # Give the player their starting chips and none belonging to other players.
@@ -77,6 +76,7 @@ class ChipGameEnv(gym.Env):
         observation = self._get_obs()
         info = {}
         return observation, info
+    
     # Scale positive rewards based on how many steps have elapsed.
     @staticmethod
     def reward_fn(reward: float, chips: int, steps: int) -> float:
@@ -236,6 +236,35 @@ class ChipGameEnv(gym.Env):
         observation[offset] = self.steps_num
         return observation
 
+    def get_action_mask(self) -> np.ndarray:
+        """Return a binary mask of valid actions for the current game state."""
+        mask = np.zeros(self.action_space.n, dtype=np.int32)
+
+        if self.done:
+            return mask
+
+        if self.state == GameState.CHOOSE_PILE:
+            # Any of the six piles can be selected.
+            if self._current_player().count_total_chips() > 0:
+                mask[:self.NUM_PILES] = 1
+        elif self.state == GameState.CHOOSE_CHIP:
+            # Only chip colors owned by the current player can be played.
+            for i, letter in enumerate(self.PLAYER_LETTERS):
+                if self._current_player().chips[letter] > 0:
+                    mask[self.NUM_PILES + i] = 1
+        elif self.state == GameState.CHOOSE_NEXT_PLAYER:
+            # Only eligible players can be selected.
+            for player in self.eligible_next_players:
+                mask[self.NUM_PILES + self.PLAYER_LETTERS.index(player.letter)] = 1
+        elif self.state == GameState.ELIMINATE_CHIP:
+            # Only chip colors present in the captured pile can be eliminated.
+            captured_pile = self.piles[self.last_played_pile]
+            for i, letter in enumerate(self.PLAYER_LETTERS):
+                if letter in captured_pile:
+                    mask[self.NUM_PILES + i] = 1
+
+        return mask
+
     def _create_player(self, letter: str):
         return Player(letter, self.MAX_CHIPS, self.PLAYER_LETTERS,)
 
@@ -336,7 +365,7 @@ class ChipGameEnv(gym.Env):
                         i
                         for i, player in enumerate(self.players)
                         if not player.eliminated
-)
+                    )
             else:
                 self.done = True
                 self.step(0)
