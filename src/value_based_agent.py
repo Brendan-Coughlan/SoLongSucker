@@ -51,26 +51,35 @@ class ValueBasedAgent(BaseAgent):
     @tf.function
     def act(self, state, env_state, action_mask=None):
         """Select an action using epsilon-greedy exploration."""
+        q_values = self.model(state, training=False)[0]
+
         if self.use_action_masking and action_mask is not None:
-            valid_actions = tf.cast(tf.where(action_mask > 0)[:, 0], tf.int64)
+            valid = tf.cast(action_mask, tf.bool)
+        else:
+            valid = tf.ones_like(q_values, dtype=tf.bool)
+            
+        # Invalid actions get a very low Q-value
+        masked_q = tf.where(valid, q_values, -float("inf"))
 
-            if int(tf.size(valid_actions)) == 0:
-                raise ValueError("No valid actions available.")
+        # Greedy action
+        best_action = tf.argmax(masked_q, output_type=tf.int64)
 
-            if tf.random.uniform(()) <= self.epsilon:
-                index = tf.random.uniform((), maxval=tf.size(valid_actions), dtype=tf.int32)
-                return valid_actions[index]
+        # Random valid action
+        random_logits = tf.where(
+            valid,
+            tf.zeros_like(q_values),
+            -float("inf")
+        )
+        random_action = tf.cast(tf.random.categorical(
+            random_logits[None, :], 1
+        )[0, 0], tf.int64)
 
-            q_values = self.model(state, training=False)[0]
-            mask = tf.cast(action_mask, tf.bool)
-            masked_q_values = tf.where(mask, q_values, tf.constant(-1e9, dtype=tf.float32))
+        return tf.cond(
+            tf.random.uniform(()) < self.epsilon,
+            lambda: random_action,
+            lambda: best_action
+        )
 
-            return tf.argmax(masked_q_values, output_type=tf.int64)
-
-        if tf.random.uniform(()) <= self.epsilon:
-            return self.choose_random_action(env_state)
-
-        return self.choose_best_action(self.model(state), env_state)
 
     def choose_random_action(self, env_state):
         """Select a random action for the current game phase."""

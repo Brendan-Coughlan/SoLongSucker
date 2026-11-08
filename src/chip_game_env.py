@@ -236,7 +236,7 @@ class ChipGameEnv(gym.Env):
         observation[offset] = self.steps_num
         return observation
 
-    def get_action_mask(self) -> np.ndarray:
+    def get_action_mask(self):
         """Return a binary mask of valid actions for the current game state."""
         mask = np.zeros(self.action_space.n, dtype=np.int32)
 
