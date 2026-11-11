@@ -194,7 +194,7 @@ class ChipGameEnv(gym.Env):
         info["log"] = step_log
         return observation, step_rewards, self.done, False, info
 
-    def _get_obs(self) -> np.ndarray:
+    def _get_obs(self):
         max_pile_size = self.NUM_PLAYERS * self.MAX_CHIPS
         total_observation_size = (
             self.NUM_PILES * self.NUM_PLAYERS * max_pile_size  # Board state

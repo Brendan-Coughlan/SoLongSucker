@@ -356,6 +356,8 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             if done:
                 break
 
+        steps_per_episode.append(step + 1)
+
         # Identify the remaining non-eliminated player.
         # Retained even though the result is not currently used.
         winner: str | None = next(
@@ -373,10 +375,6 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             total_rewards,
             agents,
         )
-
-        # Preserve original behavior: record every episode's
-        # length, including episodes that reach max_steps.
-        steps_per_episode.append(step + 1)
 
     env.close()
 
@@ -526,12 +524,10 @@ def train_value_based_agents(
                     state_size,
                 )
 
-            # Preserve the original episode-length behavior:
-            # record lengths only when the game terminates.
             if done:
                 break
 
-            steps_per_episode.append(step + 1)
+        steps_per_episode.append(step + 1)
 
         # ----------------------------------------------------
         # 5. Complete the episode
@@ -633,7 +629,7 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
             if done:
                 break
 
-            steps_per_episode.append(step + 1)
+        steps_per_episode.append(step + 1)
 
         # Train on any remaining transitions.
         if rollout:
