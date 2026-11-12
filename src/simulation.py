@@ -887,17 +887,19 @@ def run_multiple_trials(
             print_agent_statistics(f"{agent_type} - Trial {trial + 1}", agent_rewards, steps_per_episode)
 
         if plot:
-            figure_dir = "data/figures"
+            figure_dir = f"data/figures/{agent_type}"
             os.makedirs(figure_dir, exist_ok=True)
 
             plot_agent_statistics(
                 agent_rewards, steps_per_episode, num_episodes,
                 agent_type,
-                f"{figure_dir}/{agent_type}_seed_{seed}_performance.png"            )
+                f"{figure_dir}/{agent_type}_{action_masking}_{seed}_performance.png"
+            )
 
         results.append({
             "trial": trial + 1,
             "seed": seed,
+            "action_masking": action_masking,
             "agent_rewards": agent_rewards,
             "steps_per_episode": steps_per_episode,
             "mean_reward": np.mean(total_rewards),
