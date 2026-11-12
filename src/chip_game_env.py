@@ -74,8 +74,7 @@ class ChipGameEnv(gym.Env):
         self.done = False
         self.steps_num = 0
         observation = self._get_obs()
-        info = {}
-        return observation, info
+        return observation, None
     
     # Scale positive rewards based on how many steps have elapsed.
     @staticmethod
@@ -85,18 +84,16 @@ class ChipGameEnv(gym.Env):
         return min(reward, reward / (alpha * steps))
 
     def step(self, action: int):
-        info = {}
         winner = None
-        step_log = []
         # Track rewards produced by this action for each player.
         step_rewards = {player.letter: 0.0 for player in self.players}
         if self.done:
-            step_log.append("Game is already over. No more actions can be taken.\n")
             observation = self._get_obs()
-            info["winner"] = winner
-            info["log"] = step_log
-            return observation, 0, self.done, False, info
+            return observation, 0, self.done, False, None
+
+        acting_player = self._current_player()
         self.steps_num += 1
+        
         # Choose Pile
         if self.state == GameState.CHOOSE_PILE:
             if 0 <= action < self.NUM_PILES:
@@ -104,95 +101,79 @@ class ChipGameEnv(gym.Env):
                 if self._current_player().has_only_one_chip_type():
                     if self._play_chip(self.last_played_pile, self._current_player().get_only_chip_type(),):
                         reward = self.reward_fn(5.0, self.MAX_CHIPS, self.steps_num)
-                        self._current_player().reward += reward
-                        step_rewards[self._current_player().letter] += reward
+                        acting_player.reward += reward
+                        step_rewards[acting_player.letter] += reward
                     else:
-                        self._current_player().reward -= 5.0
-                        step_rewards[self._current_player().letter] -= 5.0
+                        acting_player.reward -= 5.0
+                        step_rewards[acting_player.letter] -= 5.0
                 else:
                     self.state = GameState.CHOOSE_CHIP
             else:
-                self._current_player().reward -= 5.0
-                step_rewards[self._current_player().letter] -= 5.0
+                acting_player.reward -= 5.0
+                step_rewards[acting_player.letter] -= 5.0
         # Choose Chip
         elif self.state == GameState.CHOOSE_CHIP:
             if self.NUM_PILES <= action < self.NUM_PILES + self.NUM_PLAYERS:
                 chip_letter = self.PLAYER_LETTERS[action - self.NUM_PILES]
                 if self._play_chip(self.last_played_pile, chip_letter):
                     reward = self.reward_fn(5.0, self.MAX_CHIPS, self.steps_num)
-                    self._current_player().reward += reward
-                    step_rewards[self._current_player().letter] += reward
+                    acting_player.reward += reward
+                    step_rewards[acting_player.letter] += reward
                 else:
-                    self._current_player().reward -= 5.0
-                    step_rewards[self._current_player().letter] -= 5.0
+                    acting_player.reward -= 5.0
+                    step_rewards[acting_player.letter] -= 5.0
             else:
-                self._current_player().reward -= 5.0
-                step_rewards[self._current_player().letter] -= 5.0
+                acting_player.reward -= 5.0
+                step_rewards[acting_player.letter] -= 5.0
         # Choose Next Player
         elif self.state == GameState.CHOOSE_NEXT_PLAYER:
             if self.NUM_PILES <= action < self.NUM_PILES + self.NUM_PLAYERS:
                 next_player_letter = self.PLAYER_LETTERS[action - self.NUM_PILES]
                 if self._choose_next_player(next_player_letter):
                     reward = self.reward_fn(5.0, self.MAX_CHIPS, self.steps_num)
-                    self._current_player().reward += reward
-                    step_rewards[self._current_player().letter] += reward
+                    acting_player.reward += reward
+                    step_rewards[acting_player.letter] += reward
                     self.state = GameState.CHOOSE_PILE
                 else:
-                    self._current_player().reward -= 5.0
-                    step_rewards[self._current_player().letter] -= 5.0
+                    acting_player.reward -= 5.0
+                    step_rewards[acting_player.letter] -= 5.0
             else:
-                self._current_player().reward -= 5.0
-                step_rewards[self._current_player().letter] -= 5.0
+                acting_player.reward -= 5.0
+                step_rewards[acting_player.letter] -= 5.0
         # Eliminate Chip
         elif self.state == GameState.ELIMINATE_CHIP:
             if self.NUM_PILES <= action < self.NUM_PILES + self.NUM_PLAYERS:
                 chip_to_eliminate = self.PLAYER_LETTERS[action - self.NUM_PILES]
                 if self._eliminate_chip(chip_to_eliminate):
                     reward = self.reward_fn(5.0, self.MAX_CHIPS, self.steps_num)
-                    self._current_player().reward += reward
-                    step_rewards[self._current_player().letter] += reward
+                    acting_player.reward += reward
+                    step_rewards[acting_player.letter] += reward
                     self.state = GameState.CHOOSE_PILE
                 else:
-                    self._current_player().reward -= 5.0
-                    step_rewards[self._current_player().letter] -= 5.0
+                    acting_player.reward -= 5.0
+                    step_rewards[acting_player.letter] -= 5.0
             else:
-                self._current_player().reward -= 5.0
-                step_rewards[self._current_player().letter] -= 5.0
+                acting_player.reward -= 5.0
+                step_rewards[acting_player.letter] -= 5.0
         else:
-            self._current_player().reward -= 5.0
-            step_rewards[self._current_player().letter] -= 5.0
-        # Logging
-        step_log.append(f"Current Player: {self._current_player().letter}\n")
-        step_log.append(f"Current State: {self.state.name}\n")
-        step_log.append(f"Action: {action}\n")
-        step_log.append(f"Last Played Pile: {self.last_played_pile}\n")
-        step_log.append(f"Turn History: {[player.letter for player in self.turn_history]}\n")
-        step_log.append(f"Active Players: {self._count_active_players()}\n")
-        step_log.append(f"Piles: {self.piles}\n")
-        for player in self.players:
-            step_log.append(f"{player.letter}:\n")
-            for letter, count in player.chips.items():
-                step_log.append(f"  {letter}: {count}\n")
-            step_log.append(f"Dead Chips: {player.dead_chips}\n")
-            step_log.append("\n")
-        # Return each player's accumulated reward and reset it for the next step.
+            acting_player.reward -= 5.0
+            step_rewards[acting_player.letter] -= 5.0
+
+
+       # Return each player's accumulated reward and reset it for the next step.
         for player in self.players:
             step_rewards[player.letter] = player.reward
             player.reward = 0.0
         # Check game-over condition
         if self.is_game_over():
             self.done = True
-            step_log.append("Game Over Condition Met\n")
             winner = next((player for player in self.players if not player.eliminated), None,)
             # The last non-eliminated player receives the winning reward.
             if winner:
                 winner.reward += 15.0
                 step_rewards[winner.letter] += 15.0
-                step_log.append(f"Winner ({winner.letter}) reward: 15\n")
         observation = self._get_obs()
-        info["winner"] = winner
-        info["log"] = step_log
-        return observation, step_rewards, self.done, False, info
+        return observation, step_rewards, self.done, False, None
 
     def _get_obs(self):
         max_pile_size = self.NUM_PLAYERS * self.MAX_CHIPS
@@ -268,7 +249,7 @@ class ChipGameEnv(gym.Env):
     def _create_player(self, letter: str):
         return Player(letter, self.MAX_CHIPS, self.PLAYER_LETTERS,)
 
-    def _current_player(self) -> Player:
+    def _current_player(self):
         return self.players[self.current_player_index]
 
     def _play_chip(self, pile: int, chip_letter: str):
@@ -282,7 +263,7 @@ class ChipGameEnv(gym.Env):
                 benefitting_player = next(
                     (player for player in self.players if player.letter == chip_letter),
                     None,
-)
+                    )
                 # Give control of the capture to the player represented by the matching chip.
                 if benefitting_player is not None and not benefitting_player.eliminated:
                     self.current_player_index = self.players.index(benefitting_player)

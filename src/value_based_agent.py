@@ -56,7 +56,11 @@ class ValueBasedAgent(BaseAgent):
         if self.use_action_masking and action_mask is not None:
             valid = tf.cast(action_mask, tf.bool)
         else:
-            valid = tf.ones_like(q_values, dtype=tf.bool)
+            # valid = tf.ones_like(q_values, dtype=tf.bool)
+            if env_state == GameState.CHOOSE_PILE:
+                valid = tf.constant([True] * 6 + [False] * 4)
+            else:
+                valid = tf.constant([False] * 6 + [True] * 4)
             
         # Invalid actions get a very low Q-value
         masked_q = tf.where(valid, q_values, -float("inf"))
