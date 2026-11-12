@@ -249,7 +249,12 @@ def prepare_replay_batch(minibatch, state_size):
         dtype=tf.float32,
     )
 
-    return states, actions, rewards, next_states, dones
+    next_action_masks = tf.convert_to_tensor(
+        np.array([t[6] for t in minibatch]),
+        dtype=tf.bool
+    )
+
+    return states, actions, rewards, next_states, dones, next_action_masks
 
 def prepare_actor_critic_batch(rollout, state_size):
     """Convert fresh actor-critic transitions into training tensors."""
@@ -272,7 +277,7 @@ def train_replay_batch(shared_agent, batch_size, state_size):
         batch_size,
     )
 
-    states, actions, rewards, next_states, dones = (
+    states, actions, rewards, next_states, dones, next_action_masks = (
         prepare_replay_batch(minibatch, state_size)
     )
 
@@ -282,6 +287,7 @@ def train_replay_batch(shared_agent, batch_size, state_size):
         rewards,
         next_states,
         dones,
+        next_action_masks
     )
 
 def update_agent_after_episode(shared_agent, agent_type, episode):
@@ -472,6 +478,8 @@ def train_value_based_agents(
             next_obs, step_rewards, done, _, info = env.step(action)
             next_obs = np.reshape(next_obs, (1, state_size))
 
+            next_action_mask = shared_agent.get_next_action_mask(env).numpy()
+
             # Preserve the original reward used for learning:
             # the reward associated with the acting player.
             reward = step_rewards[current_player.name]
@@ -484,6 +492,7 @@ def train_value_based_agents(
                 next_obs,
                 done,
                 env.steps_num,
+                next_action_mask
             )
 
             # Move to the next observation.

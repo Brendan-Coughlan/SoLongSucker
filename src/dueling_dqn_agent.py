@@ -5,7 +5,6 @@ from tensorflow.keras.models import Model
 
 from value_based_agent import ValueBasedAgent
 
-
 class MeanLayer(Layer):
     """Calculate the mean along a specified axis."""
 
@@ -61,14 +60,22 @@ class DuelingDQNAgent(ValueBasedAgent):
         return model
 
     @tf.function
-    def replay(self, states, actions, rewards, next_states, dones):
+    def replay(self, states, actions, rewards, next_states, dones, next_action_masks):
         """Train the dueling Q-network using Bellman targets."""
 
         with tf.GradientTape() as tape:
             # Predict current and next-state Q-values.
             targets = self.model(states)
             next_q_values = self.target_model(next_states)
-            max_next_q = tf.reduce_max(next_q_values, axis=1)
+
+            masked_next_q = tf.where(
+                next_action_masks,
+                next_q_values,
+                tf.constant(-1e9, dtype=tf.float32)
+            )
+
+            max_next_q = tf.reduce_max(masked_next_q, axis=1)
+            max_next_q = tf.where(dones > 0, 0.0, max_next_q)
 
             # Calculate Bellman targets.
             updates = rewards + (1.0 - tf.cast(dones, tf.float32)) * self.gamma * max_next_q

@@ -22,15 +22,25 @@ class DDQNAgent(ValueBasedAgent):
         super().__init__(name, state_size, action_size, **kwargs)
 
     @tf.function
-    def replay(self, states, actions, rewards, next_states, dones):
+    def replay(self, states, actions, rewards, next_states, dones, next_action_masks):
         """Train the Q-network using Double DQN Bellman targets."""
 
         with tf.GradientTape() as tape:
             # Select next actions online and evaluate with target network.
             targets = self.model(states)
-            next_actions = tf.argmax(self.model(next_states), axis=1)
+
+            online_next_q = self.model(next_states)
+            masked_online_q = tf.where(
+                next_action_masks,
+                online_next_q,
+                tf.constant(-1e9, dtype=tf.float32)
+            )
+
+            next_actions = tf.argmax(self.model(masked_online_q), axis=1)
+
             next_q_values = self.target_model(next_states)
             next_q = tf.gather(next_q_values, next_actions, batch_dims=1)
+            next_q = tf.where(dones > 0, 0.0, next_q)
 
             # Calculate Bellman targets.
             updates = rewards + (1.0 - tf.cast(dones, tf.float32)) * self.gamma * next_q

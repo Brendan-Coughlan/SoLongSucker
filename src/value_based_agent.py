@@ -44,9 +44,9 @@ class ValueBasedAgent(BaseAgent):
         """Synchronize the target network."""
         self.target_model.set_weights(self.model.get_weights())
 
-    def remember(self, state, action, reward, next_state, done, steps):
-        """Store an experience in replay memory."""
-        self.memory.append((state, action, reward, next_state, done, steps))
+    def remember(self, state, action, reward, next_state, done, steps, next_action_mask):
+        """Store an experience with the next state's permitted actions."""
+        self.memory.append((state, action, reward, next_state, done, steps, next_action_mask))
 
     @tf.function
     def act(self, state, env_state, action_mask=None):
@@ -110,3 +110,15 @@ class ValueBasedAgent(BaseAgent):
             tf.zeros(6, dtype=tf.bool),
             tf.ones(self.action_size - 6, dtype=tf.bool)
         ], axis=0)
+
+    def get_next_action_mask(self, env):
+        """Return the permitted next actions for te selected masking mode."""
+        if env.done:
+            return tf.zeros(self.action_size, dtype=tf.bool)
+
+        if self.action_masking == "full":
+            return tf.convert_to_tensor(env.get_action_mask(), dtype=tf.bool)
+        elif self.action_masking == "phase":
+            return tf.cast(self.get_phase_mask(env.state), dtype=tf.bool)
+        else:
+            return tf.ones(self.action_size, dtype=tf.bool)
