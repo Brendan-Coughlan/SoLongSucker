@@ -67,7 +67,12 @@ def main():
 
     base_seed = int(input("Base random seed? (Default: 42): ") or 42)
 
-    use_action_masking = input("Use action masking? (Y/N, Default: N): ").strip().lower() == "y"
+    action_masking = input(
+        "Action masking (none/phase/full, Default: phase): "
+    ).strip().lower() or "phase"
+
+    if action_masking not in ("none", "phase", "full"):
+        raise ValueError("Invalid action masking mode.")
 
     plot = input("Plot individual trial results? (Y/N, Default: N): ").strip().lower() == "y"
 
@@ -102,7 +107,7 @@ def main():
     print(f"Maximum steps:             {max_steps}")
     print(f"Batch size:                {batch_size}")
     print(f"Base seed:                 {base_seed}")
-    print(f"Use action masking:        {use_action_masking}")
+    print(f"Action masking:            {action_masking}")
     print(f"Plot individual trials:    {plot}")
     print(f"Print trial statistics:    {print_trial_stats}")
     print(f"Print overall statistics:  {print_overall_stats}")
@@ -172,7 +177,7 @@ def main():
                 print_overall_stats=print_overall_stats,
                 use_gpu=use_gpu,
                 base_seed=next_seed,
-                use_action_masking=use_action_masking
+                action_masking=action_masking
             )
 
             all_results = add_agent_results(all_results=all_results, agent_type=agent, results=results)

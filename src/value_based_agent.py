@@ -53,14 +53,14 @@ class ValueBasedAgent(BaseAgent):
         """Select an action using epsilon-greedy exploration."""
         q_values = self.model(state, training=False)[0]
 
-        if self.use_action_masking and action_mask is not None:
+        if self.action_masking == "full":
+            if action_mask is None:
+                raise ValueError("Full action masking requires a mask.")
             valid = tf.cast(action_mask, tf.bool)
+        elif self.action_masking == "phase":
+            valid = tf.cast(self.get_phase_mask(env_state), tf.bool)
         else:
-            # valid = tf.ones_like(q_values, dtype=tf.bool)
-            if env_state == GameState.CHOOSE_PILE:
-                valid = tf.constant([True] * 6 + [False] * 4)
-            else:
-                valid = tf.constant([False] * 6 + [True] * 4)
+            valid = tf.ones_like(q_values, dtype=tf.bool)
             
         # Invalid actions get a very low Q-value
         masked_q = tf.where(valid, q_values, -float("inf"))
@@ -98,3 +98,15 @@ class ValueBasedAgent(BaseAgent):
             return tf.cast(tf.argmax(act_values[0][:6]), tf.int64)
         else:
             return tf.cast(tf.argmax(act_values[0][6:]) + 6, tf.int64)
+
+    def get_phase_mask(self, env_state):
+        if env_state == GameState.CHOOSE_PILE:
+            return tf.concat([
+                tf.ones(6, dtype=tf.bool),
+                tf.zeros(self.action_size - 6, dtype=tf.bool)
+            ], axis=0)
+
+        return tf.concat([
+            tf.zeros(6, dtype=tf.bool),
+            tf.ones(self.action_size - 6, dtype=tf.bool)
+        ], axis=0)

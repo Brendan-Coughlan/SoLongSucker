@@ -17,7 +17,7 @@ class BaseAgent(ABC):
         self.action_size = int(action_size)
         self.learning_rate = kwargs.get("learning_rate", 0.001)
         self.model = None
-        self.use_action_masking = kwargs.get("use_action_masking", False)
+        self.action_masking = kwargs.get("action_masking", "phase")
 
     @abstractmethod
     def act(self, state, env_state, action_mask=None):
