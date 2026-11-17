@@ -1,3 +1,8 @@
+# Filename: main.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Main script for configuring and running experiments in the So Long Sucker reinforcement learning environment.
+
 import os
 from simulation import (
     load_agent_results,

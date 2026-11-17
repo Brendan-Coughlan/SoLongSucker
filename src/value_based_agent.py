@@ -1,3 +1,8 @@
+# Filename: value_based_agent.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Base class for value-based reinforcement learning agents, providing Q-networks, replay memory, epsilon-greedy action selection, and target-network synchronization.
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense

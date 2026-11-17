@@ -8,7 +8,7 @@ AGENT_TYPE = "DQN"
 MASKING_MODE = "phase"
 
 NUM_TRIALS = 1
-NUM_EPISODES = 200
+NUM_EPISODES = 5000
 MAX_STEPS = 200
 BATCH_SIZE = 32
 BASE_SEED = 42
@@ -30,10 +30,11 @@ def main():
         plot=False,
         print_trial_stats=False,
         print_overall_stats=False,
+        print_resource_summary=False,
         use_gpu=False
     )
 
-    print(metrics)
+    # print(metrics)
 
 if __name__ == "__main__":
     main()

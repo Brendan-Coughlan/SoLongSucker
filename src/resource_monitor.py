@@ -1,3 +1,8 @@
+# Filename: resource_monitor.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Monitors and records hardware resource usage (CPU, RAM, GPU) for the current process.
+
 import time
 import psutil
 import threading

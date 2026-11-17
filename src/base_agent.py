@@ -1,6 +1,10 @@
+# Filename: base_agent.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Abstract base class for reinforcement learning agents, defining common attributes, action selection, training, and model persistence interfaces.
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-
 
 class BaseAgent(ABC):
     """

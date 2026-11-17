@@ -1,3 +1,8 @@
+# Filename: chip_game_env.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Implementation of the So Long Sucker chip game environment using Gymnasium, including game state management, player actions, and reward calculation.
+
 import gymnasium as gym
 from gymnasium import spaces
 import pygame

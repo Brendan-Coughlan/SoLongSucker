@@ -1,41 +1,64 @@
+# Filename: simulation.py
+# Author: Brendan Coughlan
+# Created/Last Modified: 2026-11-17
+# Description: Simulation framework for training and evaluating reinforcement learning agents in the So Long Sucker environment.
+
 # ============================================================
 # Environment Configuration
 # ============================================================
 
 import os
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+
 # ============================================================
-# Imports
+# Standard Library Imports
 # ============================================================
 
 import pickle
 import random
 import time
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+# ============================================================
+# Third-Party Imports
+# ============================================================
 
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
+
+
+# ============================================================
+# Project Imports
+# ============================================================
 
 from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
 from analysis import print_agent_statistics, plot_agent_statistics
 from resource_monitor import ResourceMonitor
 
-# Value-based agents
 from dqn_agent import DQNAgent
 from ddqn_agent import DDQNAgent
 from dueling_dqn_agent import DuelingDQNAgent
 
-# Random baseline
 from random_agent import RandomAgent
 
-# Actor-critic agents
 from a2c_agent import A2CAgent
-from a3c_agent import A3CAgent
-from ppo_agent import PPOAgent
+
+# ============================================================
+# Simulation Configuration
+# ============================================================
+
+AGENT_REGISTRY = {
+    "DQN": DQNAgent,
+    "DDQN": DDQNAgent,
+    "DuelingDQN": DuelingDQNAgent,
+    "Random": RandomAgent,
+    "A2C": A2CAgent
+}
+
 
 # ============================================================
 # Shared Agent Player
@@ -62,24 +85,27 @@ def configure_gpu(use_gpu):
     if not use_gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-def print_training_summary(agent_type, num_episodes, total_steps, training_start):
-    """Display overall training performance statistics."""
+def create_experiment_results(
+    agent_type,
+    agent_rewards,
+    steps_per_episode,
+    metrics=None,
+    total_steps=0,
+    training_time=0.0
+):
+    return {
+        "agent_type": agent_type,
+        "agent_rewards": agent_rewards,
+        "steps_per_episode": steps_per_episode,
+        "metrics": metrics,
+        "total_steps": total_steps,
+        "training_time": training_time
+    }
 
-    total_time = time.perf_counter() - training_start
 
-    print(f"\n{agent_type} Training Summary")
-    print("-" * 60)
-    print(f"Total time: {total_time:.2f} seconds")
-    print(f"Episodes: {num_episodes}")
-    print(f"Total steps: {total_steps}")
-    print(
-        f"Episodes/sec: "
-        f"{num_episodes / max(total_time, 1e-9):.2f}"
-    )
-    print(
-        f"Steps/sec: "
-        f"{total_steps / max(total_time, 1e-9):.2f}"
-    )
+def print_trial_summary():
+    pass
+
 
 def update_training_progress(
     progress_bar,
@@ -88,20 +114,30 @@ def update_training_progress(
     training_start,
     total_steps,
 ):
-    """Update the progress bar with training speed and timing."""
+    """Update live training performance indicators."""
 
-    elapsed = time.perf_counter() - training_start
-    episode_time = time.perf_counter() - episode_start
+    current_time = time.perf_counter()
 
-    episodes_per_sec = (episode + 1) / max(elapsed, 1e-9)
-    steps_per_sec = total_steps / max(elapsed, 1e-9)
+    elapsed_time = current_time - training_start
+    episode_time = current_time - episode_start
+
+    episodes_per_second = (
+        (episode + 1) / elapsed_time
+        if elapsed_time > 0 else 0.0
+    )
+
+    steps_per_second = (
+        total_steps / elapsed_time
+        if elapsed_time > 0 else 0.0
+    )
 
     progress_bar.set_postfix({
-        "ep/s": f"{episodes_per_sec:.2f}",
-        "steps/s": f"{steps_per_sec:.1f}",
+        "ep/s": f"{episodes_per_second:.2f}",
+        "steps/s": f"{steps_per_second:.1f}",
         "ep_time": f"{episode_time:.2f}s",
-        "elapsed": f"{elapsed / 60:.1f}m",
+        "elapsed": f"{elapsed_time / 60:.1f}m",
     })
+
 
 def set_random_seed(seed):
     """Set the random seed for reproducibility."""
@@ -148,6 +184,164 @@ def add_agent_results(all_results, agent_type, results):
 
     return all_results
 
+
+# ============================================================
+# Reporting and Logging
+# ============================================================
+
+def print_section(title, width=65):
+    """Print a consistently formatted section header."""
+
+    print()
+    print("=" * width)
+    print(title.center(width))
+    print("=" * width)
+
+
+def print_separator(width=65):
+    """Print a horizontal separator."""
+
+    print("-" * width)
+
+
+def print_training_summary(
+    agent_type,
+    num_episodes,
+    total_steps,
+    training_time,
+):
+    """Print training performance statistics."""
+
+    episodes_per_second = (
+        num_episodes / training_time
+        if training_time > 0 else 0.0
+    )
+
+    steps_per_second = (
+        total_steps / training_time
+        if training_time > 0 else 0.0
+    )
+
+    average_steps = (
+        total_steps / num_episodes
+        if num_episodes > 0 else 0.0
+    )
+
+    print_section(f"{agent_type} TRAINING SUMMARY")
+
+    summary = {
+        "Episodes completed": f"{num_episodes:,}",
+        "Total environment steps": f"{total_steps:,}",
+        "Average steps per episode": f"{average_steps:.2f}",
+        "Training time": f"{training_time:.2f} s",
+        "Episodes per second": f"{episodes_per_second:.2f}",
+        "Steps per second": f"{steps_per_second:.2f}",
+    }
+
+    for label, value in summary.items():
+        print(f"{label:<32} {value:>15}")
+
+    print_separator()
+
+
+def print_resource_summary(agent_type, resource_summary):
+    """Print hardware resource utilization statistics."""
+
+    metric_labels = {
+        "cpu_percent": ("CPU utilization", "%"),
+        "ram_percent": ("RAM utilization", "%"),
+        "ram_used_gb": ("System RAM used", "GB"),
+        "ram_available_gb": ("Available system RAM", "GB"),
+        "process_ram_gb": ("Process RAM used", "GB"),
+        "gpu_percent": ("GPU utilization", "%"),
+        "gpu_memory_used_gb": ("GPU memory used", "GB"),
+        "gpu_memory_total_gb": ("Total GPU memory", "GB"),
+        "gpu_memory_percent": ("GPU memory utilization", "%"),
+        "gpu_temperature": ("GPU temperature", "°C"),
+        "gpu_power_draw_watts": ("GPU power consumption", "W")
+    }
+
+    print_section(f"{agent_type} RESOURCE USAGE")
+
+    if not resource_summary:
+        print("No resource measurements available.")
+        print_separator()
+        return
+
+    print(
+        f"{'Resource':<28}"
+        f"{'Mean':>11}"
+        f"{'Maximum':>11}"
+        f"{'Minimum':>11}"
+        f"  Unit"
+    )
+
+    print_separator()
+
+    for key, (label, unit) in metric_labels.items():
+
+        values = resource_summary.get(key)
+
+        if not values or values.get("mean") is None:
+            continue
+
+        print(
+            f"{label:<28}"
+            f"{values['mean']:>11.2f}"
+            f"{values['max']:>11.2f}"
+            f"{values['min']:>11.2f}"
+            f"  {unit}"
+        )
+
+    print_separator()
+
+
+def print_trial_header(agent_type, trial, num_trials, seed):
+    """Print information about the current trial."""
+
+    print_section(
+        f"{agent_type} - TRIAL {trial}/{num_trials}",
+        width=60,
+    )
+
+    print(f"Random seed: {seed}")
+    print_separator(60)
+
+def print_overall_trial_summary(agent_type, results):
+    """Print aggregate statistics across independent trials."""
+
+    if not results:
+        print("No trial results available.")
+        return
+
+    rewards = np.array([
+        result["mean_reward"]
+        for result in results
+    ])
+
+    steps = np.array([
+        result["mean_steps"]
+        for result in results
+    ])
+
+    print_section(
+        f"{agent_type} - SUMMARY ACROSS {len(results)} TRIALS",
+        width=60,
+    )
+
+    print(
+        f"{'Mean reward:':<30}"
+        f"{np.mean(rewards):>12.2f} ± {np.std(rewards):.2f}"
+    )
+
+    print(
+        f"{'Mean steps:':<30}"
+        f"{np.nanmean(steps):>12.2f} ± {np.nanstd(steps):.2f}"
+    )
+
+    print_separator(60)
+
+
 # ============================================================
 # Shared Helper Functions
 # ============================================================
@@ -177,42 +371,45 @@ def update_episode_rewards(total_rewards, step_rewards, players):
 def get_agent_class(agent_type):
     """Return the agent class corresponding to its name."""
 
-    if agent_type == "DQN":
-        AgentClass = DQNAgent
-    elif agent_type == "DDQN":
-        AgentClass = DDQNAgent
-    elif agent_type == "DuelingDQN":
-        AgentClass = DuelingDQNAgent
-    elif agent_type == "A2C":
-        AgentClass = A2CAgent
-    elif agent_type == "A3C":
-        AgentClass = A3CAgent
-    elif agent_type == "PPO":
-        AgentClass = PPOAgent
-    else:
+    try:
+        return AGENT_REGISTRY[agent_type]
+    except KeyError:
         raise ValueError(f"Unknown agent type: {agent_type}")
 
-    return AgentClass
 
-def create_learning_players(env, agent_type, player_names, action_masking="phase", **agent_params):
+def create_learning_players(
+    env,
+    agent_type: str,
+    player_names: list[str],
+    action_masking: str = "phase",
+    **agent_params,
+):
     """
-    Create one shared learning agent and four player wrappers.
-    All players use the same underlying model and replay memory.
+    Create one shared learning agent and player wrappers.
+
+    All players share the same underlying model and memory.
     """
-    
+
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
 
-    AgentClass = get_agent_class(agent_type)
+    agent_class = get_agent_class(agent_type)
 
-    shared_agent = AgentClass(f"shared_{agent_type}", state_size, action_size, action_masking=action_masking, **agent_params)
-    
+    shared_agent = agent_class(
+        name=f"shared_{agent_type}",
+        state_size=state_size,
+        action_size=action_size,
+        action_masking=action_masking,
+        **agent_params,
+    )
+
     players = [
         SharedAgentPlayer(name, shared_agent)
         for name in player_names
     ]
 
     return shared_agent, players, state_size
+
 
 # ============================================================
 # Replay Memory Helpers
@@ -317,9 +514,9 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
 
     set_random_seed(seed)
 
-    # Create independent random players.
-    player_names = ["A", "B", "C", "D"]
+    metrics = {}
 
+    player_names = ["A", "B", "C", "D"]
     agents = [
         RandomAgent(name)
         for name in player_names
@@ -332,10 +529,6 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
 
     steps_per_episode = []
 
-    # Track training performance.
-    training_start = time.perf_counter()
-    total_steps = 0
-
     progress_bar = tqdm(
         range(num_episodes),
         desc="Random Agent",
@@ -343,8 +536,6 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
     )
 
     for episode in progress_bar:
-        episode_start = time.perf_counter()
-
         # Start a new game.
         obs, _ = env.reset(seed=seed + episode if seed is not None else None)
 
@@ -364,10 +555,15 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
                 break
 
         steps_per_episode.append(step + 1)
+        metrics[episode] = {
+            "steps": step + 1,
+            "rewards": total_rewards.copy()
+        }
+        
 
         # Identify the remaining non-eliminated player.
         # Retained even though the result is not currently used.
-        winner: str | None = next(
+        winner = next(
             (
                 player.letter
                 for player in env.players
@@ -385,7 +581,7 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
 
     env.close()
 
-    return agent_rewards, steps_per_episode
+    return agent_rewards, steps_per_episode, metrics
 
 # ============================================================
 # Reinforcement Learning Training
@@ -527,7 +723,10 @@ def train_value_based_agents(
                 break
 
         steps_per_episode.append(step + 1)
-        metrics[episode] = {"steps": step + 1, "rewards": total_rewards.copy()}
+        metrics[episode] = {
+            "steps": step + 1, 
+            "rewards": total_rewards.copy()
+            }
 
         # ----------------------------------------------------
         # 5. Complete the episode
@@ -557,16 +756,13 @@ def train_value_based_agents(
             total_steps,
         )
 
+    total_time = time.perf_counter() - training_start
+
     # --------------------------------------------------------
     # 6. Print results and close the environment
     # --------------------------------------------------------
 
-    print_training_summary(
-        agent_type,
-        num_episodes,
-        total_steps,
-        training_start,
-    )
+    print_training_summary(agent_type, num_episodes, total_steps,total_time)
 
     env.close()
 
@@ -577,7 +773,8 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
     """Train four players using a shared on-policy actor-critic agent."""
     set_random_seed(seed)
 
-    # Initialize the shared agent and players.
+    metrics = {}
+
     player_names = ["A", "B", "C", "D"]
     shared_agent, players, state_size = create_learning_players(env, agent_type, player_names, action_masking=action_masking, **agent_params)
 
@@ -630,6 +827,10 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
                 break
 
         steps_per_episode.append(step + 1)
+        metrics[episode] = {
+            "steps": step + 1,
+            "rewards": total_rewards.copy()
+        }
 
         # Train on any remaining transitions.
         if rollout:
@@ -642,178 +843,180 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
         # Update progress-bar statistics.
         update_training_progress(progress_bar, episode, episode_start, training_start, total_steps)
 
+    total_time = time.perf_counter() - training_start
+
     # Print results and close the environment.
-    print_training_summary(agent_type, num_episodes, total_steps, training_start)
+    print_training_summary(agent_type, num_episodes, total_steps, total_time)
     env.close()
 
-    return agent_rewards, steps_per_episode
+    return agent_rewards, steps_per_episode, metrics
 
 
-def train_a3c_agents(
-    agent_type="A3C",
-    num_episodes=1000,
-    max_steps=200,
-    batch_size=32,
-    num_workers=4,
-    seed=None,
-    **agent_params
-):
-    """Train A3C with independent workers and shared global parameters."""
+# def train_a3c_agents(
+#     agent_type="A3C",
+#     num_episodes=1000,
+#     max_steps=200,
+#     batch_size=32,
+#     num_workers=4,
+#     seed=None,
+#     **agent_params
+# ):
+#     """Train A3C with independent workers and shared global parameters."""
     
-    set_random_seed(seed)
+#     set_random_seed(seed)
 
-    player_names = ["A", "B", "C", "D"]
+#     player_names = ["A", "B", "C", "D"]
 
-    sample_env = ChipGameEnv()
-    state_size = sample_env.observation_space.shape[0]
-    action_size = sample_env.action_space.n
-    sample_env.close()
+#     sample_env = ChipGameEnv()
+#     state_size = sample_env.observation_space.shape[0]
+#     action_size = sample_env.action_space.n
+#     sample_env.close()
 
-    global_agent = A3CAgent(
-        "global_A3C", state_size, action_size, **agent_params
-    )
+#     global_agent = A3CAgent(
+#         "global_A3C", state_size, action_size, **agent_params
+#     )
 
-    global_agent.optimizer._create_all_weights(
-        global_agent.model.trainable_variables
-    )
+#     global_agent.optimizer._create_all_weights(
+#         global_agent.model.trainable_variables
+#     )
     
-    update_lock = threading.Lock()
-    results_lock = threading.Lock()
+#     update_lock = threading.Lock()
+#     results_lock = threading.Lock()
 
-    agent_rewards = create_reward_history(player_names)
-    steps_per_episode = [0] * num_episodes
-    episode_rewards = [None] * num_episodes
+#     agent_rewards = create_reward_history(player_names)
+#     steps_per_episode = [0] * num_episodes
+#     episode_rewards = [None] * num_episodes
 
-    training_start = time.perf_counter()
+#     training_start = time.perf_counter()
 
-    def worker(worker_id, episode_ids):
-        env = ChipGameEnv()
+#     def worker(worker_id, episode_ids):
+#         env = ChipGameEnv()
 
-        local_agent = A3CAgent(
-            f"worker_{worker_id}", state_size, action_size, **agent_params
-        )
+#         local_agent = A3CAgent(
+#             f"worker_{worker_id}", state_size, action_size, **agent_params
+#         )
 
-        with update_lock:
-            local_agent.model.set_weights(global_agent.model.get_weights())
+#         with update_lock:
+#             local_agent.model.set_weights(global_agent.model.get_weights())
 
-        players = [
-            SharedAgentPlayer(name, local_agent)
-            for name in player_names
-        ]
+#         players = [
+#             SharedAgentPlayer(name, local_agent)
+#             for name in player_names
+#         ]
 
-        for episode in episode_ids:
-            obs, _ = env.reset(
-                seed=seed + episode if seed is not None else None
-            )
-            obs = np.reshape(obs, (1, state_size))
+#         for episode in episode_ids:
+#             obs, _ = env.reset(
+#                 seed=seed + episode if seed is not None else None
+#             )
+#             obs = np.reshape(obs, (1, state_size))
 
-            total_rewards = create_episode_rewards(player_names)
-            rollout = []
+#             total_rewards = create_episode_rewards(player_names)
+#             rollout = []
 
-            for step in range(max_steps):
-                current_player = players[env.current_player_index]
+#             for step in range(max_steps):
+#                 current_player = players[env.current_player_index]
 
-                action = int(current_player.act(
-                    tf.convert_to_tensor(obs, dtype=tf.float32),
-                    env.state
-                ))
+#                 action = int(current_player.act(
+#                     tf.convert_to_tensor(obs, dtype=tf.float32),
+#                     env.state
+#                 ))
 
-                next_obs, step_rewards, done, _, info = env.step(action)
-                next_obs = np.reshape(next_obs, (1, state_size))
+#                 next_obs, step_rewards, done, _, info = env.step(action)
+#                 next_obs = np.reshape(next_obs, (1, state_size))
 
-                reward = step_rewards[current_player.name]
+#                 reward = step_rewards[current_player.name]
 
-                rollout.append((obs, action, reward, next_obs, done))
+#                 rollout.append((obs, action, reward, next_obs, done))
 
-                obs = next_obs
+#                 obs = next_obs
 
-                update_episode_rewards(
-                    total_rewards, step_rewards, players
-                )
+#                 update_episode_rewards(
+#                     total_rewards, step_rewards, players
+#                 )
 
-                if len(rollout) >= batch_size or done:
-                    states, actions, rewards, next_states, dones = (
-                        prepare_actor_critic_batch(rollout, state_size)
-                    )
+#                 if len(rollout) >= batch_size or done:
+#                     states, actions, rewards, next_states, dones = (
+#                         prepare_actor_critic_batch(rollout, state_size)
+#                     )
 
-                    gradients = local_agent.compute_gradients(
-                        states, actions, rewards, next_states, dones
-                    )
+#                     gradients = local_agent.compute_gradients(
+#                         states, actions, rewards, next_states, dones
+#                     )
 
-                    with update_lock:
-                        global_agent.optimizer.apply_gradients(
-                            zip(
-                                gradients,
-                                global_agent.model.trainable_variables
-                            )
-                        )
-                        local_agent.model.set_weights(
-                            global_agent.model.get_weights()
-                        )
+#                     with update_lock:
+#                         global_agent.optimizer.apply_gradients(
+#                             zip(
+#                                 gradients,
+#                                 global_agent.model.trainable_variables
+#                             )
+#                         )
+#                         local_agent.model.set_weights(
+#                             global_agent.model.get_weights()
+#                         )
 
-                    rollout.clear()
+#                     rollout.clear()
 
-                if done:
-                    break
+#                 if done:
+#                     break
 
-            if rollout:
-                states, actions, rewards, next_states, dones = (
-                    prepare_actor_critic_batch(rollout, state_size)
-                )
+#             if rollout:
+#                 states, actions, rewards, next_states, dones = (
+#                     prepare_actor_critic_batch(rollout, state_size)
+#                 )
 
-                gradients = local_agent.compute_gradients(
-                    states, actions, rewards, next_states, dones
-                )
+#                 gradients = local_agent.compute_gradients(
+#                     states, actions, rewards, next_states, dones
+#                 )
 
-                with update_lock:
-                    global_agent.optimizer.apply_gradients(
-                        zip(
-                            gradients,
-                            global_agent.model.trainable_variables
-                        )
-                    )
-                    local_agent.model.set_weights(
-                        global_agent.model.get_weights()
-                    )
+#                 with update_lock:
+#                     global_agent.optimizer.apply_gradients(
+#                         zip(
+#                             gradients,
+#                             global_agent.model.trainable_variables
+#                         )
+#                     )
+#                     local_agent.model.set_weights(
+#                         global_agent.model.get_weights()
+#                     )
 
-            with results_lock:
-                episode_rewards[episode] = total_rewards
-                steps_per_episode[episode] = step + 1
+#             with results_lock:
+#                 episode_rewards[episode] = total_rewards
+#                 steps_per_episode[episode] = step + 1
 
-        env.close()
+#         env.close()
 
-    episode_groups = [
-        list(range(worker_id, num_episodes, num_workers))
-        for worker_id in range(num_workers)
-    ]
+#     episode_groups = [
+#         list(range(worker_id, num_episodes, num_workers))
+#         for worker_id in range(num_workers)
+#     ]
 
-    with ThreadPoolExecutor(max_workers=num_workers) as executor:
-        futures = [
-            executor.submit(worker, worker_id, episode_ids)
-            for worker_id, episode_ids in enumerate(episode_groups)
-            if episode_ids
-        ]
+#     with ThreadPoolExecutor(max_workers=num_workers) as executor:
+#         futures = [
+#             executor.submit(worker, worker_id, episode_ids)
+#             for worker_id, episode_ids in enumerate(episode_groups)
+#             if episode_ids
+#         ]
 
-        for future in tqdm(
-            as_completed(futures),
-            total=len(futures),
-            desc="A3C Workers",
-            unit="worker"
-        ):
-            future.result()
+#         for future in tqdm(
+#             as_completed(futures),
+#             total=len(futures),
+#             desc="A3C Workers",
+#             unit="worker"
+#         ):
+#             future.result()
 
-    for rewards in episode_rewards:
-        for name in player_names:
-            agent_rewards[name].append(rewards[name])
+#     for rewards in episode_rewards:
+#         for name in player_names:
+#             agent_rewards[name].append(rewards[name])
 
-    print_training_summary(
-        agent_type,
-        num_episodes,
-        sum(steps_per_episode),
-        training_start
-    )
+#     print_training_summary(
+#         agent_type,
+#         num_episodes,
+#         sum(steps_per_episode),
+#         training_start
+#     )
 
-    return agent_rewards, steps_per_episode
+#     return agent_rewards, steps_per_episode
 
 # ============================================================
 # Main Simulation Functions
@@ -822,21 +1025,22 @@ def train_a3c_agents(
 def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = None, action_masking = "phase", **agent_params):
     """Run random games or train the selected agent."""
     if agent_type == "Random":
-        agent_rewards, steps_per_episode = play_random_games(env, num_episodes, max_steps, seed=seed)
+        agent_rewards, steps_per_episode, metrics = play_random_games(env, num_episodes, max_steps, seed=seed)
     elif agent_type in ["DQN", "DDQN", "DuelingDQN"]:
         agent_rewards, steps_per_episode, metrics = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
     elif agent_type in ["A2C"]:
-        agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
+        agent_rewards, steps_per_episode, metrics = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
     elif agent_type in ["A3C"]:
-        env.close()
-        agent_rewards, steps_per_episode = train_a3c_agents(
-            agent_type=agent_type,
-            num_episodes=num_episodes,
-            max_steps=max_steps,
-            batch_size=batch_size,
-            num_workers=4,
-            seed=seed
-        )
+        # env.close()
+        # agent_rewards, steps_per_episode = train_a3c_agents(
+        #     agent_type=agent_type,
+        #     num_episodes=num_episodes,
+        #     max_steps=max_steps,
+        #     batch_size=batch_size,
+        #     num_workers=4,
+        #     seed=seed
+        # )
+        raise NotImplementedError("A3C agent training is not yet implemented.")
     else:
         raise ValueError(f"Unsupported agent type: {agent_type}")
 
@@ -844,14 +1048,13 @@ def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = 
 
 
 def run_agent_experiment(
-    agent_type, num_episodes, max_steps: int, batch_size: int,
-    plot = True, print_stats = True, use_gpu = False, seed = None, action_masking = "phase"
+    agent_type, num_episodes, max_steps: int, batch_size: int, use_gpu = False, seed = None, action_masking = "phase"
 ):
     """Configure, run, and report results for one agent experiment."""
 
     # Configure hardware and initialize environment.
     configure_gpu(use_gpu)
-    env: ChipGameEnv = ChipGameEnv()
+    env = ChipGameEnv()
 
     resource_monitor = ResourceMonitor(interval=1.0)
     resource_monitor.start()
@@ -863,34 +1066,19 @@ def run_agent_experiment(
         max_steps=max_steps, batch_size=batch_size, seed=seed, action_masking=action_masking
     )
 
-    resource_history = resource_monitor.stop()
+    resource_monitor.stop()
     total_experiment_time = time.perf_counter() - experiment_start
 
     resource_summary = resource_monitor.get_summary()
 
-    print("\n" + "=" * 60)
-    print(f"{agent_type} Resource Usage")
-    print("=" * 60)
-
-    for key, value in resource_summary.items():
-        if value['mean'] is None:
-            continue
-        
-        print(
-            f"{key}"
-            f"Mean: {value['mean']:.2f} | "
-            f"Max: {value['max']:.2f} | "
-            f"Min: {value['min']:.2f}"
-        )
-
     print(f"\nExperiment duration: {total_experiment_time:.2f}s")
 
-    return agent_rewards, steps_per_episode, metrics
+    return agent_rewards, steps_per_episode, metrics, resource_summary
 
 def run_multiple_trials(
     agent_type, num_trials, num_episodes, max_steps, batch_size,
     plot=True, print_trial_stats=False, print_overall_stats=True,
-    use_gpu=False, base_seed=42, action_masking="phase",
+    print_resource_summary=False, use_gpu=False, base_seed=42, action_masking="phase",
 ):
     """Run independent trials with fresh agents and environments."""
     results = []
@@ -902,17 +1090,13 @@ def run_multiple_trials(
         tf.keras.backend.clear_session()
 
         if print_trial_stats:
-            print(f"\n{'=' * 60}")
-            print(f"{agent_type} - Trial {trial + 1}/{num_trials}")
-            print(f"Seed: {seed}")
-            print(f"{'=' * 60}")
+            print_trial_header(agent_type, trial + 1, num_trials, seed)
 
-        agent_rewards, steps_per_episode, metrics = run_agent_experiment(
+        agent_rewards, steps_per_episode, metrics, resource_summary = run_agent_experiment(
             agent_type=agent_type,
             num_episodes=num_episodes,
             max_steps=max_steps,
             batch_size=batch_size,
-            plot=plot,
             use_gpu=use_gpu,
             action_masking=action_masking,
             seed=seed
@@ -921,7 +1105,7 @@ def run_multiple_trials(
         total_rewards = np.sum(list(agent_rewards.values()), axis=0)
 
         if print_trial_stats:
-            print_agent_statistics(f"{agent_type} - Trial {trial + 1}", agent_rewards, steps_per_episode)
+            print_trial_summary(agent_type, trial + 1, num_trials, seed, total_rewards, steps_per_episode)
 
         if plot:
             figure_dir = f"data/figures/{agent_type}"
@@ -940,18 +1124,15 @@ def run_multiple_trials(
             "agent_rewards": agent_rewards,
             "steps_per_episode": steps_per_episode,
             "mean_reward": np.mean(total_rewards),
-            "mean_steps": np.mean(steps_per_episode) if steps_per_episode else np.nan
+            "mean_steps": np.mean(steps_per_episode) if steps_per_episode else np.nan,
+            "resource_summary": resource_summary
         })
 
     if print_overall_stats:
-        print(f"\n{'=' * 60}")
-        print(f"{agent_type} - Summary Across {num_trials} Trials")
-        print(f"{'=' * 60}")
+        print_overall_trial_summary(agent_type, results)
 
-        rewards = np.array([result["mean_reward"] for result in results])
-        steps = np.array([result["mean_steps"] for result in results])
-
-        print(f"Reward: {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
-        print(f"Steps:  {np.nanmean(steps):.2f} ± {np.nanstd(steps):.2f}")
+    if print_resource_summary:
+        for trial_result in results:
+            print_resource_summary(agent_type, trial_result["resource_summary"])
 
     return results, metrics
