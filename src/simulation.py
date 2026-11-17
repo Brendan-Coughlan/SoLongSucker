@@ -414,6 +414,8 @@ def train_value_based_agents(
     # 1. Initialize the shared agent and players
     # --------------------------------------------------------
 
+    metrics = {}
+
     player_names: list[str] = ["A", "B", "C", "D"]
 
     shared_agent, players, state_size = create_learning_players(
@@ -425,9 +427,7 @@ def train_value_based_agents(
     )
 
     # Initialize experiment results.
-    agent_rewards = (
-        create_reward_history(player_names)
-    )
+    agent_rewards = (create_reward_history(player_names))
 
     steps_per_episode = []
 
@@ -526,6 +526,7 @@ def train_value_based_agents(
                 break
 
         steps_per_episode.append(step + 1)
+        metrics[episode] = {"steps": step + 1, "rewards": total_rewards.copy()}
 
         # ----------------------------------------------------
         # 5. Complete the episode
@@ -568,7 +569,7 @@ def train_value_based_agents(
 
     env.close()
 
-    return agent_rewards, steps_per_episode
+    return agent_rewards, steps_per_episode, metrics
 
 
 def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_steps = 200, batch_size = 32, seed = None, action_masking = "phase", **agent_params):
@@ -822,7 +823,7 @@ def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = 
     if agent_type == "Random":
         agent_rewards, steps_per_episode = play_random_games(env, num_episodes, max_steps, seed=seed)
     elif agent_type in ["DQN", "DDQN", "DuelingDQN"]:
-        agent_rewards, steps_per_episode = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
+        agent_rewards, steps_per_episode, metrics = train_value_based_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
     elif agent_type in ["A2C"]:
         agent_rewards, steps_per_episode = train_actor_critic_agents(env, agent_type, num_episodes, max_steps, batch_size, seed=seed, action_masking=action_masking, **agent_params)
     elif agent_type in ["A3C"]:
@@ -838,7 +839,7 @@ def run_simulation(env, agent_type, num_episodes, max_steps, batch_size, seed = 
     else:
         raise ValueError(f"Unsupported agent type: {agent_type}")
 
-    return agent_rewards, steps_per_episode
+    return agent_rewards, steps_per_episode, metrics
 
 
 def run_agent_experiment(
@@ -852,12 +853,12 @@ def run_agent_experiment(
     env: ChipGameEnv = ChipGameEnv()
 
     # Run the experiment.
-    agent_rewards, steps_per_episode = run_simulation(
+    agent_rewards, steps_per_episode, metrics = run_simulation(
         env=env, agent_type=agent_type, num_episodes=num_episodes,
         max_steps=max_steps, batch_size=batch_size, seed=seed, action_masking=action_masking
     )
 
-    return agent_rewards, steps_per_episode
+    return agent_rewards, steps_per_episode, metrics
 
 def run_multiple_trials(
     agent_type, num_trials, num_episodes, max_steps, batch_size,
@@ -879,7 +880,7 @@ def run_multiple_trials(
             print(f"Seed: {seed}")
             print(f"{'=' * 60}")
 
-        agent_rewards, steps_per_episode = run_agent_experiment(
+        agent_rewards, steps_per_episode, metrics = run_agent_experiment(
             agent_type=agent_type,
             num_episodes=num_episodes,
             max_steps=max_steps,
@@ -926,4 +927,4 @@ def run_multiple_trials(
         print(f"Reward: {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
         print(f"Steps:  {np.nanmean(steps):.2f} ± {np.nanstd(steps):.2f}")
 
-    return results
+    return results, metrics
