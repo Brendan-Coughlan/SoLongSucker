@@ -22,6 +22,7 @@ from tqdm import tqdm
 from base_agent import BaseAgent
 from chip_game_env import ChipGameEnv
 from analysis import print_agent_statistics, plot_agent_statistics
+from resource_monitor import ResourceMonitor
 
 # Value-based agents
 from dqn_agent import DQNAgent
@@ -852,11 +853,37 @@ def run_agent_experiment(
     configure_gpu(use_gpu)
     env: ChipGameEnv = ChipGameEnv()
 
+    resource_monitor = ResourceMonitor(interval=1.0)
+    resource_monitor.start()
+    experiment_start = time.perf_counter()
+
     # Run the experiment.
     agent_rewards, steps_per_episode, metrics = run_simulation(
         env=env, agent_type=agent_type, num_episodes=num_episodes,
         max_steps=max_steps, batch_size=batch_size, seed=seed, action_masking=action_masking
     )
+
+    resource_history = resource_monitor.stop()
+    total_experiment_time = time.perf_counter() - experiment_start
+
+    resource_summary = resource_monitor.get_summary()
+
+    print("\n" + "=" * 60)
+    print(f"{agent_type} Resource Usage")
+    print("=" * 60)
+
+    for key, value in resource_summary.items():
+        if value['mean'] is None:
+            continue
+        
+        print(
+            f"{key}"
+            f"Mean: {value['mean']:.2f} | "
+            f"Max: {value['max']:.2f} | "
+            f"Min: {value['min']:.2f}"
+        )
+
+    print(f"\nExperiment duration: {total_experiment_time:.2f}s")
 
     return agent_rewards, steps_per_episode, metrics
 
