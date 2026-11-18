@@ -102,11 +102,6 @@ def create_experiment_results(
         "training_time": training_time
     }
 
-
-def print_trial_summary():
-    pass
-
-
 def update_training_progress(
     progress_bar,
     episode,
@@ -1078,7 +1073,7 @@ def run_agent_experiment(
 def run_multiple_trials(
     agent_type, num_trials, num_episodes, max_steps, batch_size,
     plot=True, print_trial_stats=False, print_overall_stats=True,
-    print_resource_summary=False, use_gpu=False, base_seed=42, action_masking="phase",
+    print_resource_stats=False, use_gpu=False, base_seed=42, action_masking="phase",
 ):
     """Run independent trials with fresh agents and environments."""
     results = []
@@ -1104,9 +1099,6 @@ def run_multiple_trials(
 
         total_rewards = np.sum(list(agent_rewards.values()), axis=0)
 
-        if print_trial_stats:
-            print_trial_summary(agent_type, trial + 1, num_trials, seed, total_rewards, steps_per_episode)
-
         if plot:
             figure_dir = f"data/figures/{agent_type}"
             os.makedirs(figure_dir, exist_ok=True)
@@ -1131,7 +1123,7 @@ def run_multiple_trials(
     if print_overall_stats:
         print_overall_trial_summary(agent_type, results)
 
-    if print_resource_summary:
+    if print_resource_stats:
         for trial_result in results:
             print_resource_summary(agent_type, trial_result["resource_summary"])
 

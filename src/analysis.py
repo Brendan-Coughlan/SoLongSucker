@@ -163,7 +163,7 @@ def plot_algorithm_comparison(
     os.makedirs(os.path.dirname(plot_file_name) or ".", exist_ok=True)
     plt.savefig(plot_file_name, dpi=300, bbox_inches="tight")
 
-def print_algorithm_comparison_statistics(all_results):
+def print_algorithm_comparison(all_results):
     """Print performance statistics across independent trials."""
 
     print("\n" + "=" * 95)

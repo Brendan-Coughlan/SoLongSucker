@@ -7,8 +7,8 @@ from simulation import run_multiple_trials
 AGENT_TYPE = "DQN"
 MASKING_MODE = "phase"
 
-NUM_TRIALS = 1
-NUM_EPISODES = 5000
+NUM_TRIALS = 2
+NUM_EPISODES = 3000
 MAX_STEPS = 200
 BATCH_SIZE = 32
 BASE_SEED = 42
@@ -28,9 +28,9 @@ def main():
         base_seed=BASE_SEED,
         action_masking=MASKING_MODE,
         plot=False,
-        print_trial_stats=False,
-        print_overall_stats=False,
-        print_resource_summary=False,
+        print_trial_stats=True,
+        print_overall_stats=True,
+        print_resource_stats=True,
         use_gpu=False
     )
 

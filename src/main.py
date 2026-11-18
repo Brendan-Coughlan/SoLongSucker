@@ -3,222 +3,243 @@
 # Created/Last Modified: 2026-11-17
 # Description: Main script for configuring and running experiments in the So Long Sucker reinforcement learning environment.
 
+import argparse
 import os
 from simulation import (
     load_agent_results,
     save_agent_results,
     add_agent_results,
     run_multiple_trials,
+    print_section,
 )
-from analysis import plot_algorithm_comparison, print_algorithm_comparison_statistics
+from analysis import plot_algorithm_comparison, print_algorithm_comparison
 
-# ============================================================
-# Main Experiment Configuration
-# ============================================================
+
+AGENT_REGISTRY = [
+    "Random",
+    "DQN",
+    "DDQN",
+    "DuelingDQN",
+    "A2C",
+]
+
+
+def parse_arguments():
+    """Parse command-line arguments for experiment configuration."""
+
+    parser = argparse.ArgumentParser(description="Configure and run So Long Sucker experiments.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument(
+        "--agents",
+        nargs="+",
+        choices=AGENT_REGISTRY,
+        default=["Random"],
+        help="Agents to train or evaluate.",
+    )
+
+    parser.add_argument(
+        "--trials",
+        type=int,
+        default=1,
+        help="Number of new trials per agent. Use 0 to skip training.",
+    )
+
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=1000,
+        help="Number of episodes per trial.",
+    )
+
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=200,
+        help="Maximum steps per episode.",
+    )
+
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="Training batch size.",
+    )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Base random seed.",
+    )
+
+    parser.add_argument(
+        "--action-masking",
+        choices=["none", "phase", "full"],
+        default="phase",
+        help="Action masking strategy.",
+    )
+
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="Generate individual trial performance plots.",
+    )
+
+    parser.add_argument(
+        "--print-trial-stats",
+        action="store_true",
+        help="Print statistics for individual trials.",
+    )
+
+    parser.add_argument(
+        "--no-overall-stats",
+        dest="print_overall_stats",
+        action="store_false",
+        help="Disable aggregate trial statistics.",
+    )
+
+    parser.add_argument(
+        "--print-resource-stats",
+        action="store_true",
+        help="Print hardware resource statistics.",
+    )
+
+    parser.add_argument(
+        "--use-gpu",
+        action="store_true",
+        help="Enable GPU usage.",
+    )
+
+    parser.add_argument(
+        "--reset-results",
+        action="store_true",
+        help="Replace previously saved results for selected agents.",
+    )
+
+    parser.add_argument(
+        "--compare",
+        action="store_true",
+        help="Generate an algorithm comparison plot.",
+    )
+
+    # Overall statistics are enabled by default.
+    parser.set_defaults(print_overall_stats=True)
+
+    args = parser.parse_args()
+
+    if args.trials < 0:
+        parser.error("--trials cannot be negative.")
+
+    if args.episodes <= 0:
+        parser.error("--episodes must be greater than zero.")
+
+    if args.max_steps <= 0:
+        parser.error("--max-steps must be greater than zero.")
+
+    if args.batch_size <= 0:
+        parser.error("--batch-size must be greater than zero.")
+
+    return args
+
 def main():
-    print("\nWelcome to So Long Sucker Reinforcement Learning Environment!\n")
+    """Configure and execute reinforcement learning experiments."""
 
-    # ============================================================
-    # Experiment Configuration
-    # ============================================================
+    args = parse_arguments()
 
-    available_agents = [
-        "Random", "DQN", "DDQN", "DuelingDQN", "A2C", "A3C"
-    ]
+    agent_types = list(dict.fromkeys(args.agents))
 
-    agent_lookup = {
-        agent.lower(): agent for agent in available_agents
+    print("\n" + "=" * 60)
+    print("EXPERIMENT CONFIGURATION")
+    print("=" * 60)
+
+    configuration = {
+        "Agents": ", ".join(agent_types),
+        "New trials per agent": args.trials,
+        "Episodes per trial": args.episodes,
+        "Maximum steps": args.max_steps,
+        "Batch size": args.batch_size,
+        "Base seed": args.seed,
+        "Action masking": args.action_masking,
+        "Plot individual trials": args.plot,
+        "Print trial statistics": args.print_trial_stats,
+        "Print overall statistics": args.print_overall_stats,
+        "Print resource statistics": args.print_resource_stats,
+        "Use GPU": args.use_gpu,
+        "Reset saved trials": args.reset_results,
+        "Algorithm comparison": args.compare,
     }
 
-    print("Available agents:", ", ".join(available_agents))
+    for label, value in configuration.items():
+        print(f"{label:<30} {value}")
 
-    agents_input = input(
-        "\nWhat agents should be trained? "
-        "(Comma-separated, Default: Random): "
-    ).strip()
-
-    if agents_input:
-        requested_agents = [
-            agent.strip() for agent in agents_input.split(",")
-        ]
-    else:
-        requested_agents = ["Random"]
-
-    invalid_agents = [
-        agent for agent in requested_agents
-        if agent.lower() not in agent_lookup
-    ]
-
-    if invalid_agents:
-        print(f"Invalid agents: {', '.join(invalid_agents)}")
-        return
-
-    agent_types = list(dict.fromkeys(
-        agent_lookup[agent.lower()]
-        for agent in requested_agents
-    ))
-
-    # ------------------------------------------------------------
-    # Training Settings
-    # ------------------------------------------------------------
-
-    num_trials = int(input("How many NEW trials? (Default: 1, 0 to skip training): ") or 1)
-
-    num_episodes = int(input("How many episodes per trial? (Default: 1000): ") or 1000)
-
-    max_steps = int(input("Maximum steps per episode? (Default: 200): ") or 200)
-
-    batch_size = int(input("Batch size? (Default: 32): ") or 32)
-
-    base_seed = int(input("Base random seed? (Default: 42): ") or 42)
-
-    action_masking = input(
-        "Action masking (none/phase/full, Default: phase): "
-    ).strip().lower() or "phase"
-
-    if action_masking not in ("none", "phase", "full"):
-        raise ValueError("Invalid action masking mode.")
-
-    plot = input("Plot individual trial results? (Y/N, Default: N): ").strip().lower() == "y"
-
-    print_trial_stats = input("Print trial statistics? (Y/N, Default: N): ").strip().lower() == "y"
-    print_overall_stats = input("Print overall statistics? (Y/N, Default: Y): ").strip().lower() != "n"
-
-    use_gpu = input("Use GPU? (Y/N, Default: N): ").strip().lower() == "y"
-
-    # ------------------------------------------------------------
-    # Saved Results Settings
-    # ------------------------------------------------------------
-
-    truncate_results = input("\nReset previously saved trials for selected agents? (Y/N, Default: N): ").strip().lower() == "y"
-
-    # ------------------------------------------------------------
-    # Algorithm Comparison Settings
-    # ------------------------------------------------------------
-
-    compare = input("Generate algorithm comparison plot? (Y/N, Default: N): ").strip().lower() == "y"
-
-    # ============================================================
-    # Configuration Summary
-    # ============================================================
-
-    print(f"\n{'=' * 60}")
-    print("EXPERIMENT CONFIGURATION")
-    print(f"{'=' * 60}")
-
-    print(f"Agents:                    {', '.join(agent_types)}")
-    print(f"New trials per agent:      {num_trials}")
-    print(f"Episodes per trial:        {num_episodes}")
-    print(f"Maximum steps:             {max_steps}")
-    print(f"Batch size:                {batch_size}")
-    print(f"Base seed:                 {base_seed}")
-    print(f"Action masking:            {action_masking}")
-    print(f"Plot individual trials:    {plot}")
-    print(f"Print trial statistics:    {print_trial_stats}")
-    print(f"Print overall statistics:  {print_overall_stats}")
-    print(f"Use GPU:                   {use_gpu}")
-    print(f"Reset saved trials:        {truncate_results}")
-    print(f"Algorithm comparison:      {compare}")
-
-    print(f"{'=' * 60}")
-
-    if truncate_results:
-        print("\nWARNING: Saved results for the selected agents will be replaced.")
-
-    confirm = input("\nProceed? (Y/N, Default: N): ").strip().lower()
-
-    if confirm != "y":
-        print("Operation cancelled.")
-        return
-
-    # --------------------------------------------------------
-    # Run Experiments
-    # --------------------------------------------------------
+    print("=" * 60)
 
     all_results = {}
 
-    for agent in agent_types:
-        next_seed = base_seed
+    for agent_type in agent_types:
+        print_section(f"PROCESSING {agent_type}", width=60)
 
-        print(f"\n{'=' * 60}")
-        print(f"Processing {agent}")
-        print(f"{'=' * 60}\n")
+        if args.reset_results:
+            all_results[agent_type] = []
 
-        if truncate_results:
-            # Reset saved results for the current agent
-            all_results[agent] = []
-            print(f"Resetting saved results for {agent}")
+            print(f"Resetting results for {agent_type}...")
 
-            if num_trials == 0:
-                save_agent_results(agent, [])
+            if args.trials == 0:
+                save_agent_results(agent_type, all_results[agent_type])
         else:
-            # Load existing results if available
-            saved_results = load_agent_results(agent)
-            if saved_results is not None:
-                all_results[agent] = saved_results
-            else:
-                all_results[agent] = []
+            saved_results = load_agent_results(agent_type)
 
-            existing_seeds = [result["seed"] for result in all_results[agent]]
-            if existing_seeds:
-                next_seed = max(max(existing_seeds) + 1, base_seed)
+            all_results[agent_type] = saved_results if saved_results is not None else []
 
-        print(f"Existing trials for {agent}: {len(all_results[agent])}")
-        print(f"New trials will start with seed: {next_seed}")
+        existing_results = all_results[agent_type]
 
-        # --------------------------------------------------------
-        # Run new trials for the current agent
-        # --------------------------------------------------------
+        existing_seeds = [result["seed"] for result in existing_results]
+        next_seed = max(max(existing_seeds) + 1, args.seed) if existing_seeds else args.seed
 
-        if num_trials > 0:
-            results = run_multiple_trials(
-                agent_type=agent,
-                num_trials=num_trials,
-                num_episodes=num_episodes,
-                max_steps=max_steps,
-                batch_size=batch_size,
-                plot=plot,
-                print_trial_stats=print_trial_stats,
-                print_overall_stats=print_overall_stats,
-                use_gpu=use_gpu,
-                base_seed=next_seed,
-                action_masking=action_masking
-            )
+        print(f"Existing trials: {len(existing_results)}")
+        print(f"Starting seed: {next_seed}")
 
-            all_results = add_agent_results(all_results=all_results, agent_type=agent, results=results)
-            print(f"Completed {num_trials} new trials for {agent}")
+        if args.trials == 0:
+            print("Skipping trial execution as --trials is set to 0.")
+            continue
 
-    # --------------------------------------------------------
-    # Algorithm Comparison
-    # --------------------------------------------------------
+        results, _ = run_multiple_trials(
+            agent_type=agent_type,
+            num_trials=args.trials,
+            num_episodes=args.episodes,
+            max_steps=args.max_steps,
+            batch_size=args.batch_size,
+            plot=args.plot,
+            print_trial_stats=args.print_trial_stats,
+            print_overall_stats=args.print_overall_stats,
+            print_resource_stats=args.print_resource_stats,
+            use_gpu=args.use_gpu,
+            base_seed=next_seed,
+            action_masking=args.action_masking
+        )
 
-    if compare:
-        for agent in available_agents:
+        all_results = add_agent_results(all_results, agent_type, results)
+
+        print(f"Completed {len(results)} new trials for {agent_type}.")
+
+    if args.compare:
+        print_section("ALGORITHM COMPARISON", width=60)
+
+        for agent in AGENT_REGISTRY:
             if agent not in all_results:
                 saved_results = load_agent_results(agent)
-                if saved_results:
-                    all_results[agent] = saved_results
 
-        comparison_results = {
-            agent: trials
-            for agent, trials in all_results.items()
-            if trials
-        }
+                all_results[agent] = saved_results if saved_results is not None else []
+
+        comparison_results = {agent: trials for agent, trials in all_results.items() if trials}
 
         if comparison_results:
-            os.makedirs("data/figures", exist_ok=True)
-
-            plot_algorithm_comparison(
-                comparison_results,
-                plot_file_name="data/figures/algorithm_comparison.png"
-                )
-
-            print_algorithm_comparison_statistics(comparison_results)
+            plot_algorithm_comparison(comparison_results)
+            print_algorithm_comparison(comparison_results)
         else:
             print("No saved results available for comparison.")
 
     print("\nAll operations completed successfully!")
-
 
 if __name__ == "__main__":
     main()
