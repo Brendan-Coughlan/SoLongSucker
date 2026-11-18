@@ -61,7 +61,7 @@ class ChipGameEnv(gym.Env):
             )
         self.observation_space = spaces.Box(
             low=0,
-            high=max(self.MAX_CHIPS, MAX_PILE_SIZE),
+            high=np.iinfo(np.int32).max,
             shape=(TOTAL_OBSERVATION_SIZE,),
             dtype=np.int32
             )
@@ -70,14 +70,32 @@ class ChipGameEnv(gym.Env):
         super().reset(seed=seed)
         # Restore all players and game variables to their starting state.
         self.players = [self._create_player(letter) for letter in self.PLAYER_LETTERS]
-        self.current_player_index = random.randint(0, self.NUM_PLAYERS - 1)
+        self.current_player_index = int(
+            self.np_random.integers(0, self.NUM_PLAYERS)
+        )
         self.piles = [[] for _ in range(self.NUM_PILES)]
         self.state = GameState.CHOOSE_PILE
         self.last_played_pile = None
-        self.turn_history = [self.players[0]]
+        self.turn_history = [self._current_player()]
         self.eligible_next_players = []
         self.done = False
         self.steps_num = 0
+
+        # Episode metrics
+        self.total_actions = 0
+        self.illegal_actions = 0
+
+        self.player_illegal_actions = {
+            letter: 0 for letter in self.PLAYER_LETTERS
+        }
+
+        self.phase_illegal_actions = {
+            state.name: 0 for state in GameState
+        }
+
+        self.winner = None
+        self.eliminated_players = 0
+
         observation = self._get_obs()
         return observation, None
     
@@ -90,13 +108,27 @@ class ChipGameEnv(gym.Env):
 
     def step(self, action: int):
         winner = None
+
         # Track rewards produced by this action for each player.
         step_rewards = {player.letter: 0.0 for player in self.players}
         if self.done:
             observation = self._get_obs()
-            return observation, 0, self.done, False, None
+            return observation, 0, self.done, False, {}
 
         acting_player = self._current_player()
+        action_phase = self.state.name
+
+        action_mask = self.get_action_mask()
+
+        is_legal_action = action_mask[action] if 0 <= action < len(action_mask) else False
+
+        self.total_actions += 1
+
+        if not is_legal_action:
+            self.illegal_actions += 1
+            self.player_illegal_actions[acting_player.letter] += 1
+            self.phase_illegal_actions[action_phase] += 1
+
         self.steps_num += 1
         
         # Choose Pile
@@ -175,10 +207,28 @@ class ChipGameEnv(gym.Env):
             winner = next((player for player in self.players if not player.eliminated), None,)
             # The last non-eliminated player receives the winning reward.
             if winner:
+                self.winner = winner.letter
                 winner.reward += 15.0
                 step_rewards[winner.letter] += 15.0
+
+
+        self.eliminated_players = sum(
+            player.eliminated for player in self.players
+        )
+
+        # Return additional information for metric tracking.
+        info = {
+            "acting_player": acting_player.letter,
+            "action": int(action) if isinstance(action, (int, np.integer)) else action,
+            "action_phase": action_phase,
+            "is_legal": is_legal_action,
+            "illegal_actions": self.illegal_actions,
+            "winner": self.winner
+        }
+
         observation = self._get_obs()
-        return observation, step_rewards, self.done, False, None
+
+        return observation, step_rewards, self.done, False, info
 
     def _get_obs(self):
         max_pile_size = self.NUM_PLAYERS * self.MAX_CHIPS
@@ -340,22 +390,26 @@ class ChipGameEnv(gym.Env):
     def _check_player_elimination(self):
         # Eliminate chipless players until an active player with chips is reached.
         while (sum(self._current_player().chips.values()) == 0 and not self._current_player().eliminated):
-            if self.turn_history and self._count_active_players() > 1:
-                self._current_player().eliminated = True
-                self.turn_history = [player for player in self.turn_history if player != self._current_player()]
-                # Return control to the most recent player still in the turn history.
-                if len(self.turn_history) > 0:
-                    self.current_player_index = self.players.index(self.turn_history[-1])
-                else:
-                    self.current_player_index = next(
-                        i
-                        for i, player in enumerate(self.players)
-                        if not player.eliminated
-                    )
-            else:
+            if self._count_active_players() <= 1:
                 self.done = True
-                self.step(0)
                 return True
+
+            eliminated_player = self._current_player()
+            eliminated_player.eliminated = True
+
+            self.turn_history = [player for player in self.turn_history if player != eliminated_player]
+
+            if self.turn_history:
+                self.current_player_index = self.players.index(self.turn_history[-1])
+            else:
+                active_players = [i for i, player in enumerate(self.players) if not player.eliminated]
+
+                if not active_players:
+                    self.done = True
+                    return True
+                
+                self.current_player_index = active_players[0]
+
         return False
 
     def _eliminate_chip(self, chip_letter: str):

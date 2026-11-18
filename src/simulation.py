@@ -141,6 +141,7 @@ def set_random_seed(seed):
         np.random.seed(seed)
         tf.keras.utils.set_random_seed(seed)
 
+
 def save_agent_results(agent_type, results, directory="data/results"):
     """Save an agent's trial results to disk."""
     os.makedirs(directory, exist_ok=True)
@@ -179,6 +180,53 @@ def add_agent_results(all_results, agent_type, results):
 
     return all_results
 
+
+def calculate_episode_statistics(metrics):
+    """Calculate aggregate statistics from episode metrics."""
+
+    if not metrics:
+        return {}
+
+    PLAYER_LETTERS = ["A", "B", "C", "D"]
+
+    num_episodes = len(metrics)
+    winners = [result["winner"] for result in metrics if result.get("winner") is not None]
+    completed_games = len(winners)
+    win_rates = {name: winners.count(name) / completed_games * 100 for name in PLAYER_LETTERS}
+    total_actions = sum(result.get("total_actions", 0) for result in metrics)
+    total_illegal_actions = sum(result.get("illegal_actions", 0) for result in metrics)
+    total_eliminations = sum(result.get("eliminated_players", 0) for result in metrics)
+
+    player_illegal_actions = {name: sum(result.get("player_illegal_actions", {}).get(name, 0) for result in metrics) for name in PLAYER_LETTERS}
+    average_reward = {name: np.mean([result["rewards"][name] for result in metrics]) for name in PLAYER_LETTERS}
+
+    phase_illegal_actions = {}
+
+    for result in metrics:
+        for phase, count in result.get("phase_illegal_actions", {}).items():
+            phase_illegal_actions[phase] = phase_illegal_actions.get(phase, 0) + count
+
+    return {
+        "num_episodes": num_episodes,
+        "completed_games": completed_games,
+        "win_rates": win_rates,
+        "total_actions": total_actions,
+        "total_illegal_actions": total_illegal_actions,
+        "total_eliminations": total_eliminations,
+
+        "illegal_action_rate": total_illegal_actions / total_actions * 100 if total_actions > 0 else 0.0,
+        "average_illegal_actions": total_illegal_actions / num_episodes,
+
+        "player_illegal_actions": player_illegal_actions,
+        "phase_illegal_actions": phase_illegal_actions,
+        "average_reward": average_reward,
+
+        "average_steps": np.mean([result["steps"] for result in metrics]),
+        "average_duration": np.mean([result["duration"] for result in metrics]),
+        "average_eliminations": total_eliminations / num_episodes,
+
+        "draw_rate": sum(result.get("winner") is None for result in metrics) / num_episodes * 100
+    }
 
 # ============================================================
 # Reporting and Logging
@@ -302,6 +350,7 @@ def print_trial_header(agent_type, trial, num_trials, seed):
     print(f"Random seed: {seed}")
     print_separator(60)
 
+
 def print_overall_trial_summary(agent_type, results):
     """Print aggregate statistics across independent trials."""
 
@@ -337,19 +386,84 @@ def print_overall_trial_summary(agent_type, results):
     print_separator(60)
 
 
+def print_episode_statistics(agent_type, statistics):
+    """Print statistics for each episode."""
+
+    if not statistics:
+        print("No episode statistics available.")
+        return
+
+    print_section(f"{agent_type} GAME PERFORMANCE")
+
+    summary = {
+        "Episodes": statistics["num_episodes"],
+        "Completed games": statistics["completed_games"],
+        "Average steps": f'{statistics["average_steps"]:.2f}',
+        "Average duration": f'{statistics["average_duration"]:.3f} s',
+        "Average eliminations": f'{statistics["average_eliminations"]:.2f}',
+        "Draw rate": f'{statistics["draw_rate"]:.2f}%',
+        "Total actions": statistics["total_actions"],
+        "Illegal actions": statistics["total_illegal_actions"],
+        "Illegal action rate": f'{statistics["illegal_action_rate"]:.2f}%',
+        "Illegal actions/game": f'{statistics["average_illegal_actions"]:.2f}',
+    }
+
+    for label, value in summary.items():
+        print(f"{label:<32} {str(value):>15}")
+
+    print_separator()
+    print("PLAYER WIN RATES")
+
+    for name, rate in statistics["win_rates"].items():
+        print(f"Player {name:<25} {rate:>10.2f}%")
+
+    print_separator()
+    print("AVERAGE PLAYER REWARDS")
+
+    for name, reward in statistics["average_reward"].items():
+        print(f"Player {name:<25} {reward:>10.2f}")
+
+    print_separator()
+    print("ILLEGAL ACTIONS BY PLAYER")
+
+    for name, count in statistics["player_illegal_actions"].items():
+        print(f"Player {name:<25} {count:>10}")
+
+    print_separator()
+    print("ILLEGAL ACTIONS BY GAME PHASE")
+
+    for phase, count in statistics["phase_illegal_actions"].items():
+        print(f"{phase:<32} {count:>10}")
+
+    print_separator()
+
+
 # ============================================================
 # Shared Helper Functions
 # ============================================================
 
-def record_episode_metrics(metrics, episode, steps, rewards, duration):
+def record_episode_metrics(metrics, episode, steps, rewards, duration, env=None):
     """Record all results from a completed episode."""
 
-    metrics.append({
+    episode_metrics = {
         "episode": episode + 1,
         "steps": steps,
         "rewards": rewards.copy(),
         "duration": duration,
-    })
+    }
+
+    if env is not None:
+        episode_metrics.update({
+            "winner": env.winner,
+            "has_winner": env.winner is not None,
+            "total_actions": env.total_actions,
+            "illegal_actions": env.illegal_actions,
+            "illegal_action_rate": env.illegal_actions / env.total_actions if env.total_actions > 0 else 0.0,
+            "player_illegal_actions": env.player_illegal_actions.copy(),
+            "phase_illegal_actions": env.phase_illegal_actions.copy(),
+            "eliminated_players": sum(player.eliminated for player in env.players)
+        })
+    metrics.append(episode_metrics)
 
 
 def extract_episode_results(metrics, player_names):
@@ -571,7 +685,8 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             episode,
             step + 1,
             total_rewards,
-            time.perf_counter() - episode_start_time
+            time.perf_counter() - episode_start_time,
+            env=env
         )
         
 
@@ -732,7 +847,15 @@ def train_value_based_agents(
             step + 1,
             total_rewards,
             time.perf_counter() - episode_start_time,
+            env=env
         )
+
+        # print(
+        #     f"Episode {episode + 1}: "
+        #     f"Winner={env.winner}, "
+        #     f"Active players={env._count_active_players()}, "
+        #     f"Eliminated={sum(p.eliminated for p in env.players)}"
+        # )
 
         # ----------------------------------------------------
         # 5. Complete the episode
@@ -825,6 +948,7 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
             step + 1,
             total_rewards,
             time.perf_counter() - episode_start_time,
+            env=env
         )
 
         # Train on any remaining transitions.
@@ -1071,7 +1195,7 @@ def run_agent_experiment(
 
 def run_multiple_trials(
     agent_type, num_trials, num_episodes, max_steps, batch_size,
-    plot=True, print_trial_stats=False, print_overall_stats=True,
+    plot=False, print_trial_stats=False, print_overall_stats=True,
     print_resource_stats=False, use_gpu=False, base_seed=42, action_masking="phase",
 ):
     """Run independent trials with fresh agents and environments."""
@@ -1098,6 +1222,9 @@ def run_multiple_trials(
 
         total_rewards = np.sum(list(agent_rewards.values()), axis=0)
 
+        statistics = calculate_episode_statistics(metrics)
+        print_episode_statistics(agent_type, statistics)
+
         if plot:
             figure_dir = f"data/figures/{agent_type}"
             os.makedirs(figure_dir, exist_ok=True)
@@ -1112,10 +1239,15 @@ def run_multiple_trials(
             "trial": trial + 1,
             "seed": seed,
             "action_masking": action_masking,
+
             "agent_rewards": agent_rewards,
             "steps_per_episode": steps_per_episode,
+
             "mean_reward": np.mean(total_rewards),
             "mean_steps": np.mean(steps_per_episode) if steps_per_episode else np.nan,
+
+            "statistics": statistics,
+
             "resource_summary": resource_summary
         })
 
