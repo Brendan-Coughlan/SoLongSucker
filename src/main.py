@@ -203,7 +203,7 @@ def main():
             print("Skipping trial execution as --trials is set to 0.")
             continue
 
-        results, _ = run_multiple_trials(
+        results, metrics = run_multiple_trials(
             agent_type=agent_type,
             num_trials=args.trials,
             num_episodes=args.episodes,

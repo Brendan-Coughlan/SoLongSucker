@@ -341,23 +341,46 @@ def print_overall_trial_summary(agent_type, results):
 # Shared Helper Functions
 # ============================================================
 
-def create_reward_history(player_names):
-    """Initialize reward histories for all players."""
-    return {name: [] for name in player_names}
+def record_episode_metrics(metrics, episode, steps, rewards, duration):
+    """Record all results from a completed episode."""
+
+    metrics.append({
+        "episode": episode + 1,
+        "steps": steps,
+        "rewards": rewards.copy(),
+        "duration": duration,
+    })
+
+
+def extract_episode_results(metrics, player_names):
+    """Extract reward histories and step counts from episode metrics."""
+
+    agent_rewards = {
+        name: [
+            result["rewards"][name]
+            for result in metrics
+        ]
+        for name in player_names
+    }
+
+    steps_per_episode = [
+        result["steps"]
+        for result in metrics
+    ]
+
+    return agent_rewards, steps_per_episode
+
 
 def create_episode_rewards(player_names):
     """Initialize cumulative rewards for a single episode."""
     return {name: 0.0 for name in player_names}
 
-def record_episode_rewards(agent_rewards, total_rewards, players):
-    """Append each player's episode reward to its history."""
-    for player in players:
-        agent_rewards[player.name].append(total_rewards[player.name])
 
 def update_episode_rewards(total_rewards, step_rewards, players):
     """Accumulate the step rewards of all learning players."""
     for player in players:
         total_rewards[player.name] += step_rewards[player.name]
+
 
 # ============================================================
 # Agent Initialization Helpers
@@ -509,20 +532,13 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
 
     set_random_seed(seed)
 
-    metrics = {}
+    metrics = []
 
     player_names = ["A", "B", "C", "D"]
     agents = [
         RandomAgent(name)
         for name in player_names
     ]
-
-    # Initialize experiment results.
-    agent_rewards = (
-        create_reward_history(player_names)
-    )
-
-    steps_per_episode = []
 
     progress_bar = tqdm(
         range(num_episodes),
@@ -531,6 +547,7 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
     )
 
     for episode in progress_bar:
+        episode_start_time = time.time()
         # Start a new game.
         obs, _ = env.reset(seed=seed + episode if seed is not None else None)
 
@@ -549,11 +566,13 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             if done:
                 break
 
-        steps_per_episode.append(step + 1)
-        metrics[episode] = {
-            "steps": step + 1,
-            "rewards": total_rewards.copy()
-        }
+        record_episode_metrics(
+            metrics,
+            episode,
+            step + 1,
+            total_rewards,
+            time.perf_counter() - episode_start_time
+        )
         
 
         # Identify the remaining non-eliminated player.
@@ -567,12 +586,7 @@ def play_random_games(env, num_episodes = 1000, max_steps = 500, seed = None):
             None,
         )
 
-        # Store cumulative rewards for all random agents.
-        record_episode_rewards(
-            agent_rewards,
-            total_rewards,
-            agents,
-        )
+    agent_rewards, steps_per_episode = extract_episode_results(metrics, player_names)
 
     env.close()
 
@@ -606,9 +620,9 @@ def train_value_based_agents(
     # 1. Initialize the shared agent and players
     # --------------------------------------------------------
 
-    metrics = {}
+    metrics = []
 
-    player_names: list[str] = ["A", "B", "C", "D"]
+    player_names = ["A", "B", "C", "D"]
 
     shared_agent, players, state_size = create_learning_players(
         env,
@@ -617,11 +631,6 @@ def train_value_based_agents(
         action_masking=action_masking,
         **agent_params,
     )
-
-    # Initialize experiment results.
-    agent_rewards = (create_reward_history(player_names))
-
-    steps_per_episode = []
 
     # Track training performance.
     training_start = time.perf_counter()
@@ -638,7 +647,7 @@ def train_value_based_agents(
     # --------------------------------------------------------
 
     for episode in progress_bar:
-        episode_start = time.perf_counter()
+        episode_start_time = time.perf_counter()
 
         # Reset and reshape the initial observation.
         obs, _ = env.reset(seed=seed + episode if seed is not None else None)
@@ -717,22 +726,17 @@ def train_value_based_agents(
             if done:
                 break
 
-        steps_per_episode.append(step + 1)
-        metrics[episode] = {
-            "steps": step + 1, 
-            "rewards": total_rewards.copy()
-            }
+        record_episode_metrics(
+            metrics,
+            episode,
+            step + 1,
+            total_rewards,
+            time.perf_counter() - episode_start_time,
+        )
 
         # ----------------------------------------------------
         # 5. Complete the episode
         # ----------------------------------------------------
-
-        # Save each player's cumulative episode reward.
-        record_episode_rewards(
-            agent_rewards,
-            total_rewards,
-            players,
-        )
 
         # Decay epsilon, save weights, and update target network
         # according to the original schedule.
@@ -743,13 +747,7 @@ def train_value_based_agents(
         )
 
         # Update progress-bar statistics.
-        update_training_progress(
-            progress_bar,
-            episode,
-            episode_start,
-            training_start,
-            total_steps,
-        )
+        update_training_progress(progress_bar, episode, episode_start_time, training_start, total_steps)
 
     total_time = time.perf_counter() - training_start
 
@@ -761,6 +759,8 @@ def train_value_based_agents(
 
     env.close()
 
+    agent_rewards, steps_per_episode = extract_episode_results(metrics, player_names)
+    
     return agent_rewards, steps_per_episode, metrics
 
 
@@ -768,13 +768,11 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
     """Train four players using a shared on-policy actor-critic agent."""
     set_random_seed(seed)
 
-    metrics = {}
+    metrics = []
 
     player_names = ["A", "B", "C", "D"]
     shared_agent, players, state_size = create_learning_players(env, agent_type, player_names, action_masking=action_masking, **agent_params)
 
-    agent_rewards = create_reward_history(player_names)
-    steps_per_episode = []
     training_start = time.perf_counter()
     total_steps = 0
 
@@ -782,7 +780,7 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
 
     # Run training episodes.
     for episode in progress_bar:
-        episode_start = time.perf_counter()
+        episode_start_time = time.perf_counter()
         obs, _ = env.reset(seed=seed + episode if seed is not None else None)
         obs = np.reshape(obs, (1, state_size))
         total_rewards = create_episode_rewards(player_names)
@@ -821,28 +819,29 @@ def train_actor_critic_agents(env, agent_type = "A2C", num_episodes = 1000, max_
             if done:
                 break
 
-        steps_per_episode.append(step + 1)
-        metrics[episode] = {
-            "steps": step + 1,
-            "rewards": total_rewards.copy()
-        }
+        record_episode_metrics(
+            metrics,
+            episode,
+            step + 1,
+            total_rewards,
+            time.perf_counter() - episode_start_time,
+        )
 
         # Train on any remaining transitions.
         if rollout:
             states, actions, rewards, next_states, dones = prepare_actor_critic_batch(rollout, state_size)
             shared_agent.replay(states, actions, rewards, next_states, dones)
 
-        # Record episode results.
-        record_episode_rewards(agent_rewards, total_rewards, players)
-
         # Update progress-bar statistics.
-        update_training_progress(progress_bar, episode, episode_start, training_start, total_steps)
+        update_training_progress(progress_bar, episode, episode_start_time, training_start, total_steps)
 
     total_time = time.perf_counter() - training_start
 
     # Print results and close the environment.
     print_training_summary(agent_type, num_episodes, total_steps, total_time)
     env.close()
+
+    agent_rewards, steps_per_episode = extract_episode_results(metrics, player_names)
 
     return agent_rewards, steps_per_episode, metrics
 
